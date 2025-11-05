@@ -10,82 +10,70 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = Attendance::with('member');
-
-        if ($request->has('member_id')) {
-            $query->where('member_id', $request->member_id);
+        // Check if user is trainer
+        if (!Auth::user()->isTrainer()) {
+            abort(403, 'Unauthorized access.');
         }
 
-        if ($request->has('date')) {
-            $query->whereDate('date', $request->date);
+        $trainer = Auth::user();
+        
+        // Get attendance records for members (you might need to adjust this based on your relationships)
+        $attendance = Attendance::with('member')
+            ->latest()
+            ->paginate(15);
+
+        // Return VIEW instead of JSON
+        return view('trainer.attendance.index', compact('attendance'));
+    }
+
+    public function create()
+    {
+        if (!Auth::user()->isTrainer()) {
+            abort(403, 'Unauthorized access.');
         }
 
-        if ($request->has('date_from') && $request->has('date_to')) {
-            $query->whereBetween('date', [$request->date_from, $request->date_to]);
-        }
+        $trainer = Auth::user();
+        $members = User::members()->active()->get();
 
-        $attendance = $query->latest()->paginate(15);
-
-        return response()->json($attendance);
+        // Return VIEW instead of JSON
+        return view('trainer.attendance.create', compact('members'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'member_id' => 'required|exists:users,id',
-            'check_in' => 'required|date_format:Y-m-d H:i:s',
-            'check_out' => 'nullable|date_format:Y-m-d H:i:s|after:check_in',
-            'date' => 'required|date',
-            'workout_duration' => 'nullable|integer|min:0',
-            'calories_burned' => 'nullable|integer|min:0',
-            'notes' => 'nullable|string',
-        ]);
-
-        // Check if attendance already exists for this member and date
-        $existingAttendance = Attendance::where('member_id', $validated['member_id'])
-            ->whereDate('date', $validated['date'])
-            ->first();
-
-        if ($existingAttendance) {
-            return response()->json([
-                'message' => 'Attendance already recorded for this member today'
-            ], 422);
+        if (!Auth::user()->isTrainer()) {
+            abort(403, 'Unauthorized access.');
         }
 
-        $attendance = Attendance::create($validated);
-
-        return response()->json([
-            'message' => 'Attendance recorded successfully',
-            'attendance' => $attendance
-        ], 201);
-    }
-
-    public function update(Request $request, Attendance $attendance)
-    {
         $validated = $request->validate([
-            'check_out' => 'nullable|date_format:Y-m-d H:i:s|after:check_in',
-            'workout_duration' => 'nullable|integer|min:0',
-            'calories_burned' => 'nullable|integer|min:0',
-            'notes' => 'nullable|string',
+            'member_id' => 'required|exists:users,id',
+            'date' => 'required|date',
+            'check_in' => 'required|date_format:H:i',
+            'check_out' => 'required|date_format:H:i|after:check_in',
+            'notes' => 'nullable|string|max:500',
         ]);
 
-        $attendance->update($validated);
+        // Calculate workout duration and calories (you can adjust this logic)
+        $checkIn = \Carbon\Carbon::parse($validated['check_in']);
+        $checkOut = \Carbon\Carbon::parse($validated['check_out']);
+        $workoutDuration = $checkOut->diffInMinutes($checkIn);
+        
+        // Simple calories calculation (adjust based on your needs)
+        $caloriesBurned = round($workoutDuration * 7); // 7 calories per minute as example
 
-        return response()->json([
-            'message' => 'Attendance updated successfully',
-            'attendance' => $attendance
+        $attendance = Attendance::create([
+            'member_id' => $validated['member_id'],
+            'date' => $validated['date'],
+            'check_in' => $validated['check_in'],
+            'check_out' => $validated['check_out'],
+            'workout_duration' => $workoutDuration,
+            'calories_burned' => $caloriesBurned,
+            'notes' => $validated['notes'],
         ]);
-    }
 
-    public function todayAttendance()
-    {
-        $attendance = Attendance::with('member')
-            ->whereDate('date', today())
-            ->latest()
-            ->get();
-
-        return response()->json($attendance);
+        return redirect()->route('trainer.attendance.index')
+            ->with('success', 'Attendance recorded successfully.');
     }
 }

@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Manage Members - GymSystem')
+@section('title', 'Manage Trainers - GymSystem')
 
 @section('content')
 <div class="py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-semibold text-gray-900">Manage Members</h1>
-            <a href="{{ route('admin.members.create') }}" 
+            <h1 class="text-2xl font-semibold text-gray-900">Manage Trainers</h1>
+            <a href="{{ route('admin.trainers.create') }}" 
                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-                <i class="fas fa-plus mr-2"></i>Add New Member
+                <i class="fas fa-plus mr-2"></i>Add New Trainer
             </a>
         </div>
 
@@ -19,18 +19,18 @@
             </div>
         @endif
 
-        <!-- Stats Cards -->
+        <!-- Stats Cards - FIXED: Using trainers data -->
         <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
-                            <i class="fas fa-users text-2xl text-blue-600"></i>
+                            <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Total Members</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $members->total() }}</dd>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Trainers</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $trainers->total() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -45,9 +45,9 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Active Members</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Trainers</dt>
                                 <dd class="text-lg font-medium text-gray-900">
-                                    {{ $members->where('is_active', true)->count() }}
+                                    {{ $trainers->where('is_active', true)->count() }}
                                 </dd>
                             </dl>
                         </div>
@@ -59,13 +59,13 @@
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
-                            <i class="fas fa-crown text-2xl text-purple-600"></i>
+                            <i class="fas fa-chart-line text-2xl text-purple-600"></i>
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">VIP Members</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Avg. Experience</dt>
                                 <dd class="text-lg font-medium text-gray-900">
-                                    {{ $members->where('membership_type', 'vip')->count() }}
+                                    {{ number_format($trainers->avg('experience_years') ?? 0, 1) }} years
                                 </dd>
                             </dl>
                         </div>
@@ -74,26 +74,26 @@
             </div>
         </div>
 
-        <!-- Members Table -->
+        <!-- Trainers Table -->
         <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-md">
             <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Members List</h3>
-                <p class="mt-1 text-sm text-gray-500">All registered gym members and their details.</p>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Trainers List</h3>
+                <p class="mt-1 text-sm text-gray-500">All registered gym trainers and their details.</p>
             </div>
 
-            @if($members->count() > 0)
+            @if($trainers->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Member
+                                    Trainer
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Membership
+                                    Specialization
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Contact
+                                    Experience & Rate
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Activity
@@ -107,72 +107,65 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($members as $member)
+                            @foreach($trainers as $trainer)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
-                                            <i class="fas fa-user-circle text-2xl text-gray-400"></i>
+                                            <i class="fas fa-user-tie text-2xl text-gray-400"></i>
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ $member->name }}
+                                                {{ $trainer->name }}
                                             </div>
                                             <div class="text-sm text-gray-500">
-                                                {{ $member->email }}
+                                                {{ $trainer->email }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 capitalize">
-                                        {{ $member->membership_type }}
+                                    <div class="text-sm text-gray-900">
+                                        {{ $trainer->specialization }}
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        Expires: {{ $member->membership_expiry ? $member->membership_expiry->format('M d, Y') : 'N/A' }}
+                                        {{ Str::limit($trainer->certifications, 30) ?: 'No certifications' }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        {{ $member->phone }}
+                                        {{ $trainer->experience_years }} years
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        {{ $member->date_of_birth ? $member->date_of_birth->age . ' years' : 'Age not set' }}
+                                        ${{ number_format($trainer->hourly_rate) }}/hour
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        {{ $member->bookings_count }} bookings
+                                        {{ $trainer->trainer_bookings_count }} bookings
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        {{ $member->payments_count }} payments
+                                        {{ $trainer->workout_plans_count }} plans
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        @if($member->is_active) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
-                                        {{ $member->is_active ? 'Active' : 'Inactive' }}
+                                        @if($trainer->is_active) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
+                                        {{ $trainer->is_active ? 'Active' : 'Inactive' }}
                                     </span>
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        @if($member->membership_expiry && $member->membership_expiry->isFuture())
-                                            <span class="text-green-600">Valid</span>
-                                        @else
-                                            <span class="text-red-600">Expired</span>
-                                        @endif
-                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end space-x-2">
-                                        <a href="{{ route('admin.members.show', $member) }}" 
+                                        <a href="{{ route('admin.trainers.show', $trainer) }}" 
                                            class="text-blue-600 hover:text-blue-900">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.members.edit', $member) }}" 
+                                        <a href="{{ route('admin.trainers.edit', $trainer) }}" 
                                            class="text-green-600 hover:text-green-900">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.members.destroy', $member) }}" method="POST" 
-                                              onsubmit="return confirm('Are you sure you want to delete this member?')"
+                                        <form action="{{ route('admin.trainers.destroy', $trainer) }}" method="POST" 
+                                              onsubmit="return confirm('Are you sure you want to delete this trainer?')"
                                               class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -190,19 +183,19 @@
                 
                 <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                    {{ $members->links() }}
+                    {{ $trainers->links() }}
                 </div>
             @else
                 <div class="text-center py-12">
-                    <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-900">No members found</h3>
+                    <i class="fas fa-dumbbell text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900">No trainers found</h3>
                     <p class="mt-2 text-sm text-gray-500">
-                        Get started by adding your first member.
+                        Get started by adding your first trainer.
                     </p>
                     <div class="mt-6">
-                        <a href="{{ route('admin.members.create') }}" 
+                        <a href="{{ route('admin.trainers.create') }}" 
                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                            <i class="fas fa-plus mr-2"></i>Add New Member
+                            <i class="fas fa-plus mr-2"></i>Add New Trainer
                         </a>
                     </div>
                 </div>

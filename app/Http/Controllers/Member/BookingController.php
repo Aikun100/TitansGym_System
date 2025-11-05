@@ -10,10 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
+    // NO CONSTRUCTOR - middleware is handled in routes
 
     public function index()
     {
@@ -46,7 +43,9 @@ class BookingController extends Controller
                 ->with('error', 'Your membership is not active. Please renew your membership to book sessions.');
         }
 
-        $trainers = User::trainers()->active()->get(['id', 'name', 'specialization', 'hourly_rate']);
+        $trainers = User::where('role', 'trainer')
+            ->where('is_active', true)
+            ->get(['id', 'name', 'specialization', 'hourly_rate']);
 
         return view('member.bookings.create', compact('trainers'));
     }
@@ -60,7 +59,7 @@ class BookingController extends Controller
         $member = Auth::user();
 
         // Check if member has active membership
-        if ($member->membership_status !== 'active') {
+        if (!$member->membership_expiry || $member->membership_expiry->isPast()) {
             return redirect()->back()
                 ->with('error', 'Your membership is not active. Please renew your membership.')
                 ->withInput();
@@ -69,8 +68,8 @@ class BookingController extends Controller
         $validated = $request->validate([
             'trainer_id' => 'required|exists:users,id',
             'booking_date' => 'required|date|after:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
             'session_type' => 'required|in:personal_training,group_session,consultation',
             'notes' => 'nullable|string|max:500',
         ]);

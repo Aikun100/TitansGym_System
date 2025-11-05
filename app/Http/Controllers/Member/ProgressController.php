@@ -11,26 +11,45 @@ class ProgressController extends Controller
 {
     public function index()
     {
+        // Check if user is member
+        if (!Auth::user()->isMember()) {
+            abort(403, 'Unauthorized access.');
+        }
+
         $member = Auth::user();
 
         $progress = Progress::where('member_id', $member->id)
             ->orderBy('record_date', 'desc')
             ->paginate(10);
 
-        return response()->json($progress);
+        // Return VIEW instead of JSON
+        return view('member.progress.index', compact('progress'));
     }
 
     public function show(Progress $progress)
     {
+        // Check if user is member
+        if (!Auth::user()->isMember()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Check if the progress record belongs to the current member
         if ($progress->member_id !== Auth::id()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Return VIEW instead of JSON
+        return view('member.progress.show', compact('progress'));
+    }
+
+    // If you need API endpoints, create separate API controller
+    // Or move these to an API controller
+    public function progressChart()
+    {
+        if (!Auth::user()->isMember()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        return response()->json($progress);
-    }
-
-    public function progressChart()
-    {
         $member = Auth::user();
 
         $progress = Progress::where('member_id', $member->id)
@@ -42,6 +61,10 @@ class ProgressController extends Controller
 
     public function latestProgress()
     {
+        if (!Auth::user()->isMember()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $member = Auth::user();
 
         $progress = Progress::where('member_id', $member->id)

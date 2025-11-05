@@ -6,17 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
+    // REMOVE THIS CONSTRUCTOR COMPLETELY
+    // public function __construct()
+    // {
+    //     $this->middleware('auth');
+    // }
 
     public function index()
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -29,7 +31,7 @@ class PaymentController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -39,7 +41,7 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -73,7 +75,7 @@ class PaymentController extends Controller
 
     public function updateStatus(Request $request, Payment $payment)
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -89,7 +91,7 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment)
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -101,7 +103,7 @@ class PaymentController extends Controller
 
     public function stats()
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
