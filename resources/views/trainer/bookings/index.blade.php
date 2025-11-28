@@ -88,31 +88,32 @@
             </div>
         </div>
 
-        <!-- Filters -->
+        <!-- Search Bar -->
         <div class="mt-6 bg-white shadow sm:rounded-lg">
             <div class="px-4 py-4 sm:px-6">
-                <form action="{{ route('trainer.bookings.index') }}" method="GET" class="flex space-x-4">
-                    <div class="flex-1">
-                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select name="status" id="status" 
-                                class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                            <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
+                <form action="{{ route('trainer.bookings.index') }}" method="GET" class="flex space-x-4" id="searchForm">
+                    <div class="flex-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" 
+                               name="search" 
+                               id="search" 
+                               value="{{ request('search') }}"
+                               placeholder="Search by trainer, session, date, or status..."
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+                    </div>
+                    <div class="w-48">
+                        <select name="status" 
+                                id="status" 
+                                onchange="this.form.submit()"
+                                class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+                            <option value="">All Status</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
                             <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                             <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select>
-                    </div>
-                    <div class="flex-1">
-                        <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
-                        <input type="date" name="date" id="date" value="{{ request('date') }}"
-                               class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" 
-                                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition">
-                            <i class="fas fa-filter mr-2"></i>Filter
-                        </button>
                     </div>
                 </form>
             </div>
@@ -154,7 +155,13 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
-                                            <i class="fas fa-user-circle text-2xl text-gray-400"></i>
+                                            @if($booking->member->avatar)
+                                                <img src="{{ asset('storage/' . $booking->member->avatar) }}" alt="{{ $booking->member->name }}" class="h-10 w-10 rounded-full object-cover">
+                                            @else
+                                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                                                    <i class="fas fa-user text-white text-sm"></i>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">

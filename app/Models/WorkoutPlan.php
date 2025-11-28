@@ -14,6 +14,7 @@ class WorkoutPlan extends Model
         'member_id',
         'title',
         'description',
+        'exercise_recommendations',
         'goal',
         'duration_weeks',
         'difficulty_level',
@@ -21,12 +22,15 @@ class WorkoutPlan extends Model
         'schedule',
         'diet_plan',
         'status',
+        'execution_status',
+        'executed_at',
     ];
 
     protected $casts = [
         'exercises' => 'array',
         'schedule' => 'array',
         'diet_plan' => 'array',
+        'executed_at' => 'datetime',
     ];
 
     // Relationships
@@ -44,5 +48,19 @@ class WorkoutPlan extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    // Helper methods for execution tracking
+    public function markAsExecuted()
+    {
+        $this->update([
+            'execution_status' => 'executed',
+            'executed_at' => now(),
+        ]);
+    }
+
+    public function isExecuted()
+    {
+        return $this->execution_status === 'executed';
     }
 }

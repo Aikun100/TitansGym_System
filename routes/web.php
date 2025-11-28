@@ -20,6 +20,7 @@ use App\Http\Controllers\Member\PaymentController as MemberPaymentController;
 use App\Http\Controllers\Member\ProgressController as MemberProgressController;
 use App\Http\Controllers\Member\ExerciseController as MemberExerciseController;
 use App\Http\Controllers\Member\WorkoutSplitsController as MemberWorkoutSplitsController;
+use App\Http\Controllers\NotificationController;
 
 // Public routes
 Route::get('/', function () {
@@ -42,6 +43,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/pending-approval', function () {
+    return view('auth.pending-approval');
+})->name('pending-approval');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Password Reset routes
@@ -63,6 +67,18 @@ Route::middleware('auth')->group(function () {
             default => redirect()->route('home'),
         };
     })->name('dashboard');
+
+    // Notification routes (available to all authenticated users)
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+        Route::get('/recent', [NotificationController::class, 'getRecent'])->name('notifications.recent');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::post('/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read');
+    });
+
 
     // Admin routes
     Route::prefix('admin')->group(function () {
@@ -110,6 +126,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/booking-analytics/export', [AdminReportController::class, 'bookingAnalyticsExport'])->name('admin.reports.booking-analytics.export');
         Route::get('/reports/progress-tracking', [AdminReportController::class, 'progressTrackingReport'])->name('admin.reports.progress-tracking');
         Route::get('/reports/progress-tracking/export', [AdminReportController::class, 'progressTrackingExport'])->name('admin.reports.progress-tracking.export');
+        
+        // User Approval Management
+        Route::get('/user-approvals', [App\Http\Controllers\Admin\UserApprovalController::class, 'index'])->name('admin.approvals.index');
+        Route::post('/user-approvals/{user}/approve', [App\Http\Controllers\Admin\UserApprovalController::class, 'approve'])->name('admin.approvals.approve');
+        Route::post('/user-approvals/{user}/reject', [App\Http\Controllers\Admin\UserApprovalController::class, 'reject'])->name('admin.approvals.reject');
         Route::get('/reports/class-utilization', [AdminReportController::class, 'classUtilizationReport'])->name('admin.reports.class-utilization');
         Route::get('/reports/class-utilization/export', [AdminReportController::class, 'classUtilizationExport'])->name('admin.reports.class-utilization.export');
         Route::get('/reports/revenue-by-trainer', [AdminReportController::class, 'revenueByTrainerReport'])->name('admin.reports.revenue-by-trainer');
@@ -118,6 +139,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/member-retention/export', [AdminReportController::class, 'memberRetentionExport'])->name('admin.reports.member-retention.export');
         Route::get('/reports/upcoming-expirations', [AdminReportController::class, 'upcomingExpirationsReport'])->name('admin.reports.upcoming-expirations');
         Route::get('/reports/upcoming-expirations/export', [AdminReportController::class, 'upcomingExpirationsExport'])->name('admin.reports.upcoming-expirations.export');
+        
+        // Profile
+        Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
+        Route::get('/profile/edit', [AdminDashboardController::class, 'editProfile'])->name('admin.profile.edit');
+        Route::put('/profile', [AdminDashboardController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::post('/profile/update-avatar', [AdminDashboardController::class, 'updateAvatar'])->name('admin.profile.update-avatar');
     });
 
     // Trainer routes
@@ -129,6 +156,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/workout-plans/create', [TrainerWorkoutPlanController::class, 'create'])->name('trainer.workout-plans.create');
         Route::post('/workout-plans', [TrainerWorkoutPlanController::class, 'store'])->name('trainer.workout-plans.store');
         Route::get('/workout-plans/{workoutPlan}', [TrainerWorkoutPlanController::class, 'show'])->name('trainer.workout-plans.show');
+        Route::get('/workout-plans/{workoutPlan}/edit', [TrainerWorkoutPlanController::class, 'edit'])->name('trainer.workout-plans.edit');
+        Route::put('/workout-plans/{workoutPlan}', [TrainerWorkoutPlanController::class, 'update'])->name('trainer.workout-plans.update');
+        Route::delete('/workout-plans/{workoutPlan}', [TrainerWorkoutPlanController::class, 'destroy'])->name('trainer.workout-plans.destroy');
+        Route::post('/workout-plans/{workoutPlan}/mark-executed', [TrainerWorkoutPlanController::class, 'markAsExecuted'])->name('trainer.workout-plans.mark-executed');
+        Route::post('/workout-plans/{workoutPlan}/mark-not-executed', [TrainerWorkoutPlanController::class, 'markAsNotExecuted'])->name('trainer.workout-plans.mark-not-executed');
         
         // Attendance
         Route::get('/attendance', [TrainerAttendanceController::class, 'index'])->name('trainer.attendance.index');
@@ -137,8 +169,8 @@ Route::middleware('auth')->group(function () {
         
         // Bookings
         Route::get('/bookings', [TrainerBookingController::class, 'index'])->name('trainer.bookings.index');
-        Route::get('/bookings/{booking}', [TrainerBookingController::class, 'show'])->name('trainer.bookings.show');
         Route::get('/bookings/calendar', [TrainerBookingController::class, 'calendar'])->name('trainer.bookings.calendar');
+        Route::get('/bookings/{booking}', [TrainerBookingController::class, 'show'])->name('trainer.bookings.show');
         Route::patch('/bookings/{booking}/status', [TrainerBookingController::class, 'updateStatus'])->name('trainer.bookings.update-status');
         
         // Progress Tracking
@@ -149,6 +181,24 @@ Route::middleware('auth')->group(function () {
         
         // Workout Splits Guide
         Route::get('/workout-splits', [TrainerWorkoutSplitsController::class, 'index'])->name('trainer.workout-splits.index');
+        
+        // Profile
+        Route::get('/profile', [TrainerDashboardController::class, 'profile'])->name('trainer.profile');
+        Route::get('/profile/edit', [TrainerDashboardController::class, 'editProfile'])->name('trainer.profile.edit');
+        Route::put('/profile', [TrainerDashboardController::class, 'updateProfile'])->name('trainer.profile.update');
+        Route::post('/profile/update-avatar', [TrainerDashboardController::class, 'updateAvatar'])->name('trainer.profile.update-avatar');
+        
+        // Photo Album
+        Route::post('/photos', [TrainerDashboardController::class, 'storePhoto'])->name('trainer.photos.store');
+        Route::delete('/photos/{photo}', [TrainerDashboardController::class, 'destroyPhoto'])->name('trainer.photos.destroy');
+        
+        // View Members and Trainers
+        Route::get('/members/{member}', [TrainerDashboardController::class, 'viewMember'])->name('trainer.members.show');
+        Route::get('/trainers/{trainer}', [TrainerDashboardController::class, 'viewTrainer'])->name('trainer.trainers.show');
+        
+        // Clients
+        Route::get('/clients', [TrainerDashboardController::class, 'clients'])->name('trainer.clients.index');
+        Route::get('/clients/{member}', [TrainerDashboardController::class, 'clientProfile'])->name('trainer.clients.show');
     });
 
     // Member routes
@@ -164,7 +214,20 @@ Route::middleware('auth')->group(function () {
         
         // Progress
         Route::get('/progress', [MemberProgressController::class, 'index'])->name('member.progress.index');
+        Route::post('/progress', [MemberProgressController::class, 'store'])->name('member.progress.store');
         Route::get('/progress/{progress}', [MemberProgressController::class, 'show'])->name('member.progress.show');
+        
+        // Workout Logs
+        Route::get('/workout-logs', [App\Http\Controllers\Member\WorkoutLogController::class, 'index'])->name('member.workout-logs.index');
+        Route::post('/workout-logs', [App\Http\Controllers\Member\WorkoutLogController::class, 'store'])->name('member.workout-logs.store');
+        Route::get('/workout-logs/chart-data', [App\Http\Controllers\Member\WorkoutLogController::class, 'chartData'])->name('member.workout-logs.chart-data');
+        
+        // Meal Plan
+        Route::get('/meal-plan', [App\Http\Controllers\Member\MealPlanController::class, 'index'])->name('member.meal-plan.index');
+        
+        // Supplements
+        Route::get('/supplements', [App\Http\Controllers\Member\SupplementController::class, 'index'])->name('member.supplements.index');
+        
         // Attendance (member view)
         Route::get('/attendance', [MemberDashboardController::class, 'attendanceIndex'])->name('member.attendance.index');
         Route::get('/attendance/export', [MemberDashboardController::class, 'attendanceExport'])->name('member.attendance.export');
@@ -184,5 +247,32 @@ Route::middleware('auth')->group(function () {
         
         // Workout Splits Guide
         Route::get('/workout-splits', [MemberWorkoutSplitsController::class, 'index'])->name('member.workout-splits.index');
+        
+        // Workout Plans
+        Route::get('/workout-plans', [App\Http\Controllers\Member\WorkoutPlanController::class, 'index'])->name('member.workout-plans.index');
+        Route::get('/workout-plans/{workoutPlan}', [App\Http\Controllers\Member\WorkoutPlanController::class, 'show'])->name('member.workout-plans.show');
+        Route::post('/workout-plans/{workoutPlan}/mark-executed', [App\Http\Controllers\Member\WorkoutPlanController::class, 'markAsExecuted'])->name('member.workout-plans.mark-executed');
+        
+        // Trainer Reviews
+        Route::get('/trainers/{trainer}/review', [App\Http\Controllers\Member\TrainerReviewController::class, 'create'])->name('member.trainers.review.create');
+        Route::post('/trainers/{trainer}/review', [App\Http\Controllers\Member\TrainerReviewController::class, 'store'])->name('member.trainers.review.store');
+        Route::get('/reviews/{review}/edit', [App\Http\Controllers\Member\TrainerReviewController::class, 'edit'])->name('member.reviews.edit');
+        Route::put('/reviews/{review}', [App\Http\Controllers\Member\TrainerReviewController::class, 'update'])->name('member.reviews.update');
+        Route::delete('/reviews/{review}', [App\Http\Controllers\Member\TrainerReviewController::class, 'destroy'])->name('member.reviews.destroy');
+
+        
+        // Profile
+        Route::get('/profile', [MemberDashboardController::class, 'profile'])->name('member.profile');
+        Route::get('/profile/edit', [MemberDashboardController::class, 'editProfile'])->name('member.profile.edit');
+        Route::put('/profile', [MemberDashboardController::class, 'updateProfile'])->name('member.profile.update');
+        Route::post('/profile/update-avatar', [MemberDashboardController::class, 'updateAvatar'])->name('member.profile.update-avatar');
+        
+        // Photo Album
+        Route::post('/photos', [MemberDashboardController::class, 'storePhoto'])->name('member.photos.store');
+        Route::delete('/photos/{photo}', [MemberDashboardController::class, 'destroyPhoto'])->name('member.photos.destroy');
+        
+        // View Members and Trainers
+        Route::get('/members/{member}', [MemberDashboardController::class, 'viewMember'])->name('member.members.show');
+        Route::get('/trainers/{trainer}', [MemberDashboardController::class, 'viewTrainer'])->name('member.trainers.show');
     });
 });

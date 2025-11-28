@@ -1,0 +1,196 @@
+﻿@extends('layouts.app')
+
+@section('title', 'My Profile - TitansGym')
+
+@section('content')
+<div class="py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2 flex items-center">
+                <i class="fas fa-user-circle text-orange-600 mr-3"></i>My Profile
+            </h1>
+            <p class="text-lg text-gray-600">View and manage your account information</p>
+        </div>
+
+        <!-- Success Message -->
+        @if(session('success'))
+            <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center shadow-sm">
+                <i class="fas fa-check-circle mr-2"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Profile Card -->
+        <div class="neuro-card p-8 mb-6">
+            <div class="flex items-center mb-8">
+                <!-- Avatar with Upload Button -->
+                <div class="relative mr-6">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg overflow-hidden" id="avatar-preview">
+                        @if(auth()->user()->avatar)
+                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile Photo" class="w-full h-full object-cover">
+                        @else
+                            <i class="fas fa-user text-white text-4xl"></i>
+                        @endif
+                    </div>
+                    
+                    <!-- Upload Button Overlay -->
+                    <button type="button" onclick="document.getElementById('avatar-input').click()" 
+                            class="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 border-2 border-white group"
+                            title="Change Profile Photo">
+                        <i class="fas fa-camera text-white text-xs group-hover:scale-110 transition-transform"></i>
+                    </button>
+                    
+                    <!-- Hidden File Input -->
+                    <form action="{{ route(auth()->user()->role . '.profile.update-avatar') }}" method="POST" enctype="multipart/form-data" id="avatar-form">
+                        @csrf
+                        <input type="file" id="avatar-input" name="avatar" accept="image/*" class="hidden" onchange="previewAndSubmitAvatar(event)">
+                    </form>
+                </div>
+                
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">{{ auth()->user()->name }}</h2>
+                    <p class="text-gray-600 mt-1">{{ auth()->user()->email }}</p>
+                    <span class="inline-block mt-2 px-4 py-1 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-full text-sm font-bold">
+                        {{ ucfirst(auth()->user()->role) }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- User Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-info-circle text-orange-600 mr-2"></i>Account Information
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-sm text-gray-600">Full Name:</span>
+                            <p class="font-semibold text-gray-900">{{ auth()->user()->name }}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600">Email:</span>
+                            <p class="font-semibold text-gray-900">{{ auth()->user()->email }}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600">Role:</span>
+                            <p class="font-semibold text-gray-900">{{ ucfirst(auth()->user()->role) }}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600">Member Since:</span>
+                            <p class="font-semibold text-gray-900">{{ auth()->user()->created_at->format('F d, Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-cog text-orange-600 mr-2"></i>Quick Actions
+                    </h3>
+                    <div class="space-y-3">
+                        <a href="{{ route(auth()->user()->role . '.dashboard') }}" 
+                           class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                            <i class="fas fa-home mr-2 text-orange-600"></i>Go to Dashboard
+                        </a>
+                        @if(auth()->user()->isMember())
+                            <a href="{{ route('member.bookings.index') }}" 
+                               class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                                <i class="fas fa-calendar-alt mr-2 text-orange-600"></i>My Bookings
+                            </a>
+                            <a href="{{ route('member.payments.index') }}" 
+                               class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                                <i class="fas fa-credit-card mr-2 text-orange-600"></i>Payment History
+                            </a>
+                        @elseif(auth()->user()->isTrainer())
+                            <a href="{{ route('trainer.bookings.index') }}" 
+                               class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                                <i class="fas fa-calendar-check mr-2 text-orange-600"></i>My Bookings
+                            </a>
+                            <a href="{{ route('trainer.workout-plans.index') }}" 
+                               class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                                <i class="fas fa-clipboard-list mr-2 text-orange-600"></i>Workout Plans
+                            </a>
+                        @elseif(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.members.index') }}" 
+                               class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                                <i class="fas fa-users mr-2 text-orange-600"></i>Manage Members
+                            </a>
+                            <a href="{{ route('admin.reports.index') }}" 
+                               class="block w-full px-4 py-3 bg-white hover:bg-gray-100 rounded-lg text-gray-900 font-medium transition-colors duration-200 border border-gray-200">
+                                <i class="fas fa-chart-bar mr-2 text-orange-600"></i>View Reports
+                            </a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" 
+                                    class="block w-full px-4 py-3 bg-red-50 hover:bg-red-100 rounded-lg text-red-700 font-medium transition-colors duration-200 border border-red-200">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if(auth()->user()->isTrainer() || auth()->user()->isMember())
+        <!-- Photo Album Section -->
+        <div class="neuro-card p-8 mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-images text-orange-600 mr-3"></i>Photo Album
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">Showcase your work and achievements</p>
+                </div>
+                <button type="button" onclick="document.getElementById('photo-input').click()" 
+                        class="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                    <i class="fas fa-plus mr-2"></i>Add Photo
+                </button>
+            </div>
+
+            <!-- Upload Form -->
+            <form action="{{ route(auth()->user()->role . '.photos.store') }}" method="POST" enctype="multipart/form-data" id="photo-form" class="hidden">
+                @csrf
+                <input type="file" id="photo-input" name="photo" accept="image/*" onchange="previewPhoto(event)">
+                <input type="text" id="photo-caption" name="caption" placeholder="Add a caption (optional)">
+            </form>
+
+            <!-- Photo Grid -->
+            @php
+                $photos = auth()->user()->isTrainer() ? auth()->user()->trainerPhotos : auth()->user()->memberPhotos;
+            @endphp
+            @if($photos->count() > 0)
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @foreach($photos as $photo)
+                <div class="relative group overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-300">
+                    <img src="{{ asset('storage/' . $photo->photo_path) }}" 
+                         alt="{{ $photo->caption }}" 
+                         class="w-full h-48 object-cover cursor-pointer transform group-hover:scale-110 transition-transform duration-300"
+                         onclick="openLightbox('{{ asset('storage/' . $photo->photo_path) }}', '{{ addslashes($photo->caption) }}')">
+                    
+                    <!-- Overlay on Hover -->
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-3">
+                            <button onclick="openLightbox('{{ asset('storage/' . $photo->photo_path) }}', '{{ addslashes($photo->caption) }}')" 
+                                    class="p-3 bg-white rounded-full hover:bg-gray-100 transition">
+                                <i class="fas fa-search-plus text-gray-800"></i>
+                            </button>
+                            <form action="{{ route(auth()->user()->role . '.photos.destroy', $photo) }}" method="POST" 
+                                  onsubmit="return confirm('Are you sure you want to delete this photo?')" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-3 bg-red-600 rounded-full hover:bg-red-700 transition">
+                                    <i class="fas fa-trash text-white"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    @if($photo->caption)
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-3">
+                        <p class="text-white text-sm truncate">{{ $photo->caption }}</p>
+                    </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>

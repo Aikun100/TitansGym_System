@@ -30,20 +30,30 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors sortable"
+                                    data-column="member" onclick="sortAttendanceTable('member')">
                                     Member
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors sortable"
+                                    data-column="date" onclick="sortAttendanceTable('date')">
                                     Date
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors sortable"
+                                    data-column="checkin" onclick="sortAttendanceTable('checkin')">
                                     Check In/Out
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors sortable"
+                                    data-column="duration" onclick="sortAttendanceTable('duration')">
                                     Duration
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors sortable"
+                                    data-column="calories" onclick="sortAttendanceTable('calories')">
                                     Calories
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Notes
@@ -52,7 +62,12 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($attendance as $record)
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-gray-50 attendance-row"
+                                data-member="{{ $record->member->name }}"
+                                data-date="{{ $record->date }}"
+                                data-checkin="{{ $record->check_in }}"
+                                data-duration="{{ abs($record->workout_duration) }}"
+                                data-calories="{{ $record->calories_burned }}">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
@@ -124,4 +139,72 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+// Table Sorting Functionality
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
+
+function sortAttendanceTable(column) {
+    const tbody = document.querySelector('.attendance-row')?.closest('tbody');
+    if (!tbody) return;
+    
+    const rows = Array.from(tbody.querySelectorAll('.attendance-row'));
+    
+    // Toggle sort direction if same column
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+    
+    // Update sort icons
+    document.querySelectorAll('.sortable .sort-icon').forEach(icon => {
+        icon.className = 'fas fa-sort ml-1 text-gray-400 sort-icon';
+    });
+    
+    const currentHeader = document.querySelector(`.sortable[data-column="${column}"] .sort-icon`);
+    if (currentHeader) {
+        currentHeader.className = `fas fa-sort-${currentSortDirection === 'asc' ? 'up' : 'down'} ml-1 text-orange-600 sort-icon`;
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch(column) {
+            case 'member':
+                aValue = a.dataset.member.toLowerCase();
+                bValue = b.dataset.member.toLowerCase();
+                break;
+            case 'date':
+                aValue = new Date(a.dataset.date);
+                bValue = new Date(b.dataset.date);
+                break;
+            case 'checkin':
+                aValue = new Date(a.dataset.checkin);
+                bValue = new Date(b.dataset.checkin);
+                break;
+            case 'duration':
+            case 'calories':
+                aValue = parseFloat(a.dataset[column]);
+                bValue = parseFloat(b.dataset[column]);
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+@endpush
+
 @endsection

@@ -58,6 +58,18 @@
                                 <span class="text-gray-500"><i class="fas fa-layer-group mr-2 text-purple-500"></i>Difficulty</span>
                                 <span class="font-semibold text-gray-900 capitalize">{{ $plan->difficulty_level }}</span>
                             </div>
+                            <div class="flex justify-between text-sm p-2 rounded-lg bg-white bg-opacity-40">
+                                <span class="text-gray-500"><i class="fas fa-check-circle mr-2 text-green-500"></i>Execution</span>
+                                @if($plan->execution_status === 'executed')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        Executed
+                                    </span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
+                                        Not Executed
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="mt-6 pt-4 border-t border-gray-200 border-opacity-50 flex justify-between items-center">

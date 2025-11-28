@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 
 class BookingController extends Controller
 {
@@ -45,7 +46,7 @@ class BookingController extends Controller
 
         $trainers = User::where('role', 'trainer')
             ->where('is_active', true)
-            ->get(['id', 'name', 'specialization', 'hourly_rate']);
+            ->get(['id', 'name', 'email', 'phone', 'avatar', 'specialization', 'hourly_rate', 'experience_years']);
 
         return view('member.bookings.create', compact('trainers'));
     }
@@ -94,6 +95,11 @@ class BookingController extends Controller
         $validated['price'] = $this->calculateSessionPrice($validated['trainer_id'], $validated['session_type']);
 
         $booking = Booking::create($validated);
+
+        // Notify the trainer about the new booking
+        $booking->load('member'); // Load member relationship
+        $trainer = User::find($validated['trainer_id']);
+        NotificationService::newBooking($trainer, $booking);
 
         return redirect()->route('member.bookings.index')
             ->with('success', 'Booking request sent successfully! The trainer will confirm your session soon.');

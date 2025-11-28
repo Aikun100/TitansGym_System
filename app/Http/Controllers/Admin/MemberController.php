@@ -15,16 +15,36 @@ use Illuminate\Validation\Rule;
 
 class MemberController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
-        $members = User::members()
-            ->withCount(['bookings', 'payments'])
-            ->latest()
-            ->paginate(10);
+        $query = User::members()->withCount(['bookings', 'payments']);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $isActive = $request->status === 'active';
+            $query->where('is_active', $isActive);
+        }
+
+        // Membership type filter
+        if ($request->filled('membership')) {
+            $query->where('membership_type', $request->membership);
+        }
+
+        $members = $query->latest()->paginate(10)->appends($request->query());
 
         return view('admin.members.index', compact('members'));
     }
@@ -87,7 +107,10 @@ class MemberController extends Controller
 
         $member->load(['bookings.trainer', 'payments']);
 
-        return view('admin.members.show', compact('member', 'bookingsCount', 'paymentsCount', 'attendanceCount', 'progressCount'));
+        // Get member's photos
+        $photos = $member->memberPhotos;
+
+        return view('admin.members.show', compact('member', 'bookingsCount', 'paymentsCount', 'attendanceCount', 'progressCount', 'photos'));
     }
 
     public function edit(User $member)

@@ -3,6 +3,82 @@
 @section('title', 'Exercise Library - GymSystem')
 
 @section('content')
+<style>
+    /* Tablet Devices - iPad Mini, iPad Air, iPad Pro, Surface Pro 7 (768px to 1024px) */
+    @media (min-width: 768px) and (max-width: 1024px) {
+        /* Force body to use full width */
+        body {
+            overflow-x: hidden !important;
+        }
+        
+        /* Make container absolutely full width */
+        .max-w-7xl {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        /* Remove any container constraints */
+        .py-6 > .max-w-7xl {
+            max-width: none !important;
+            width: 100% !important;
+        }
+        
+        /* Make all cards full width */
+        .neuro-card {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        /* Optimize padding */
+        .p-6 {
+            padding: 1.25rem !important;
+        }
+        
+        /* Ensure no margins create gaps */
+        .mx-auto {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        
+        /* Exercise grid responsive */
+        .grid.md\\:grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+        
+        .grid.lg\\:grid-cols-3 {
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
+    }
+    
+    /* Mobile Devices (640px and below) */
+    @media (max-width: 640px) {
+        .max-w-7xl {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        .p-6 {
+            padding: 1rem !important;
+        }
+        
+        .grid.md\\:grid-cols-2,
+        .grid.lg\\:grid-cols-3 {
+            grid-template-columns: 1fr !important;
+        }
+    }
+    
+    /* Small phones (375px and below) */
+    @media (max-width: 375px) {
+        .p-6 {
+            padding: 0.875rem !important;
+        }
+    }
+</style>
+
 <div class="py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
@@ -13,6 +89,171 @@
             </div>
         </div>
         
+        <!-- BMI Calculator -->
+        <div class="mb-8">
+            <div class="neuro-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                        BMI Calculator
+                    </h3>
+                    <span class="text-sm text-gray-500">Track BMI + Optional Body Fat & Muscle Mass</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Input Section -->
+                    <div class="space-y-4">
+                        <!-- Height Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Height</label>
+                            <div class="flex gap-2">
+                                <div class="flex-1">
+                                    <input type="number" id="heightInput" 
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           placeholder="Enter height" 
+                                           step="0.1" 
+                                           min="0">
+                                </div>
+                                <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <button type="button" id="unitCm" 
+                                            class="px-3 py-1 rounded-md text-sm font-medium transition-all bg-white shadow text-blue-600">
+                                        cm
+                                    </button>
+                                    <button type="button" id="unitM" 
+                                            class="px-3 py-1 rounded-md text-sm font-medium transition-all text-gray-600 hover:text-gray-900">
+                                        m
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Weight Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+                            <input type="number" id="weightInput" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                   placeholder="Enter weight in kg" 
+                                   step="0.1" 
+                                   min="0">
+                        </div>
+
+                        <!-- Body Fat Percentage Input (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Body Fat % <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input type="number" id="bodyFatInput" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                   placeholder="Enter body fat percentage" 
+                                   step="0.1" 
+                                   min="0"
+                                   max="100">
+                        </div>
+
+                        <!-- Muscle Mass Input (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Muscle Mass (kg) <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input type="number" id="muscleMassInput" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                   placeholder="Enter muscle mass in kg" 
+                                   step="0.1" 
+                                   min="0">
+                        </div>
+
+                        <!-- Calculate Button -->
+                        <button type="button" id="calculateBMI" 
+                                class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                            <i class="fas fa-calculator mr-2"></i>Calculate BMI
+                        </button>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div id="bmiResult" class="hidden">
+                        <div class="bg-gray-800 rounded-xl p-6 h-full flex flex-col justify-center">
+                            <div class="text-center mb-4">
+                                <p class="text-sm text-gray-300 mb-2">Your BMI</p>
+                                <p id="bmiValue" class="text-5xl font-bold text-white">0.0</p>
+                            </div>
+                            
+                            <div class="text-center mb-4">
+                                <span id="bmiCategory" class="inline-block px-4 py-2 rounded-full text-sm font-semibold"></span>
+                            </div>
+                            
+                            <div id="bmiMotivation" class="text-center">
+                                <p class="text-sm text-gray-200 italic"></p>
+                            </div>
+
+                            <!-- BMI Scale Visual -->
+                            <div class="mt-6">
+                                <div class="h-3 bg-gradient-to-r from-blue-400 via-green-500 via-yellow-500 via-orange-500 to-red-600 rounded-full relative">
+                                    <div id="bmiIndicator" class="absolute w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-lg transform -translate-y-0.5 transition-all duration-500" style="left: 0%;"></div>
+                                </div>
+                                <div class="flex justify-between mt-2 text-xs text-gray-400">
+                                    <span>15</span>
+                                    <span>25</span>
+                                    <span>35</span>
+                                    <span>45</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Save to Progress Button -->
+                            <form action="{{ route('member.progress.store') }}" method="POST" class="mt-6">
+                                @csrf
+                                <input type="hidden" name="height" id="saveHeight">
+                                <input type="hidden" name="weight" id="saveWeight">
+                                <input type="hidden" name="bmi" id="saveBmi">
+                                <input type="hidden" name="body_fat_percentage" id="saveBodyFat">
+                                <input type="hidden" name="muscle_mass" id="saveMuscleMass">
+                                <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                                    <i class="fas fa-save mr-2"></i>Save to Progress
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder when no result -->
+                    <div id="bmiPlaceholder" class="flex items-center justify-center bg-gray-50 rounded-xl p-6">
+                        <div class="text-center text-gray-400">
+                            <i class="fas fa-chart-line text-6xl mb-4"></i>
+                            <p class="text-sm">Enter your height and weight to calculate your BMI</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BMI Categories Reference -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-sm font-medium text-gray-700 mb-3">BMI Categories (WHO Standards):</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-blue-400"></div>
+                            <span class="text-gray-600">< 18.5 Underweight</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span class="text-gray-600">18.5-24.9 Normal</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <span class="text-gray-600">25-29.9 Overweight</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                            <span class="text-gray-600">30-34.9 Obesity I</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <span class="text-gray-600">35-39.9 Obesity II</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-700"></div>
+                            <span class="text-gray-600">≥ 40 Obesity III</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Exercise Library Accordion -->
         <div class="mb-8">
@@ -822,6 +1063,149 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }, 2000);
     }
+
+    // BMI Calculator Functionality
+    let currentUnit = 'cm'; // Default unit
+
+    const heightInput = document.getElementById('heightInput');
+    const weightInput = document.getElementById('weightInput');
+    const calculateBtn = document.getElementById('calculateBMI');
+    const unitCmBtn = document.getElementById('unitCm');
+    const unitMBtn = document.getElementById('unitM');
+    const bmiResult = document.getElementById('bmiResult');
+    const bmiPlaceholder = document.getElementById('bmiPlaceholder');
+    const bmiValue = document.getElementById('bmiValue');
+    const bmiCategory = document.getElementById('bmiCategory');
+    const bmiMotivation = document.getElementById('bmiMotivation');
+    const bmiIndicator = document.getElementById('bmiIndicator');
+
+    // Unit toggle functionality
+    unitCmBtn.addEventListener('click', function() {
+        if (currentUnit === 'm' && heightInput.value) {
+            // Convert meters to cm
+            heightInput.value = (parseFloat(heightInput.value) * 100).toFixed(1);
+        }
+        currentUnit = 'cm';
+        unitCmBtn.classList.add('bg-white', 'shadow', 'text-blue-600');
+        unitCmBtn.classList.remove('text-gray-600');
+        unitMBtn.classList.remove('bg-white', 'shadow', 'text-blue-600');
+        unitMBtn.classList.add('text-gray-600');
+        heightInput.placeholder = 'Enter height in cm';
+    });
+
+    unitMBtn.addEventListener('click', function() {
+        if (currentUnit === 'cm' && heightInput.value) {
+            // Convert cm to meters
+            heightInput.value = (parseFloat(heightInput.value) / 100).toFixed(2);
+        }
+        currentUnit = 'm';
+        unitMBtn.classList.add('bg-white', 'shadow', 'text-blue-600');
+        unitMBtn.classList.remove('text-gray-600');
+        unitCmBtn.classList.remove('bg-white', 'shadow', 'text-blue-600');
+        unitCmBtn.classList.add('text-gray-600');
+        heightInput.placeholder = 'Enter height in meters';
+    });
+
+    // Calculate BMI
+    calculateBtn.addEventListener('click', function() {
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
+
+        // Validation
+        if (!height || !weight || height <= 0 || weight <= 0) {
+            alert('Please enter valid height and weight values');
+            return;
+        }
+
+        // Convert height to meters if in cm
+        const heightInMeters = currentUnit === 'cm' ? height / 100 : height;
+
+        // Validate realistic ranges
+        if (heightInMeters < 0.5 || heightInMeters > 3) {
+            alert('Please enter a realistic height value');
+            return;
+        }
+
+        if (weight < 20 || weight > 500) {
+            alert('Please enter a realistic weight value');
+            return;
+        }
+
+        // Calculate BMI: weight (kg) / height (m)^2
+        const bmi = weight / (heightInMeters * heightInMeters);
+        const bmiRounded = bmi.toFixed(1);
+
+        // Determine category and styling
+        let category, categoryClass, motivation, indicatorPosition;
+
+        if (bmi < 18.5) {
+            category = 'Underweight';
+            categoryClass = 'bg-blue-400 text-white';
+            motivation = 'Consider consulting with a nutritionist to reach a healthy weight';
+            indicatorPosition = ((bmi - 15) / 30) * 100; // Scale 15-45
+        } else if (bmi >= 18.5 && bmi < 25) {
+            category = 'Normal Weight';
+            categoryClass = 'bg-green-500 text-white';
+            motivation = 'Keep it up! You\'re doing great! 🎉';
+            indicatorPosition = ((bmi - 15) / 30) * 100;
+        } else if (bmi >= 25 && bmi < 30) {
+            category = 'Overweight';
+            categoryClass = 'bg-yellow-500 text-gray-900';
+            motivation = 'Work with your trainer to reach your fitness goals';
+            indicatorPosition = ((bmi - 15) / 30) * 100;
+        } else if (bmi >= 30 && bmi < 35) {
+            category = 'Obesity (Class I)';
+            categoryClass = 'bg-orange-500 text-white';
+            motivation = 'Let\'s create a personalized fitness plan together';
+            indicatorPosition = ((bmi - 15) / 30) * 100;
+        } else if (bmi >= 35 && bmi < 40) {
+            category = 'Obesity (Class II)';
+            categoryClass = 'bg-red-500 text-white';
+            motivation = 'Your health journey starts now - we\'re here to help';
+            indicatorPosition = ((bmi - 15) / 30) * 100;
+        } else {
+            category = 'Obesity (Class III)';
+            categoryClass = 'bg-red-700 text-white';
+            motivation = 'Consult with healthcare professionals and your trainer for support';
+            indicatorPosition = ((bmi - 15) / 30) * 100;
+        }
+
+        // Cap indicator position
+        indicatorPosition = Math.max(0, Math.min(100, indicatorPosition));
+
+        // Update UI
+        bmiValue.textContent = bmiRounded;
+        bmiCategory.textContent = category;
+        bmiCategory.className = `inline-block px-4 py-2 rounded-full text-sm font-semibold ${categoryClass}`;
+        bmiMotivation.querySelector('p').textContent = motivation;
+        bmiIndicator.style.left = `${indicatorPosition}%`;
+
+        // Show result, hide placeholder
+        bmiPlaceholder.classList.add('hidden');
+        bmiResult.classList.remove('hidden');
+
+        // Populate hidden form fields for saving to progress
+        const bodyFat = document.getElementById('bodyFatInput').value;
+        const muscleMass = document.getElementById('muscleMassInput').value;
+        
+        document.getElementById('saveHeight').value = heightInMeters.toFixed(2);
+        document.getElementById('saveWeight').value = weight;
+        document.getElementById('saveBmi').value = bmiRounded;
+        document.getElementById('saveBodyFat').value = bodyFat || '';
+        document.getElementById('saveMuscleMass').value = muscleMass || '';
+
+        // Smooth scroll to result
+        bmiResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    // Allow Enter key to calculate
+    [heightInput, weightInput].forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateBtn.click();
+            }
+        });
+    });
 });
 </script>
 @endpush

@@ -43,7 +43,7 @@
             </div>
 
             <!-- Today's Sessions -->
-            <div class="neuro-stat group">
+            <a href="{{ route('trainer.bookings.index') }}" class="neuro-stat group hover:shadow-2xl transition-all duration-300 cursor-pointer">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -59,10 +59,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Active Plans -->
-            <div class="neuro-stat group">
+            <a href="{{ route('trainer.workout-plans.index') }}" class="neuro-stat group hover:shadow-2xl transition-all duration-300 cursor-pointer">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -78,10 +78,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Total Sessions -->
-            <div class="neuro-stat group">
+            <a href="{{ route('trainer.bookings.index') }}" class="neuro-stat group hover:shadow-2xl transition-all duration-300 cursor-pointer">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -96,6 +96,151 @@
                             </dl>
                         </div>
                     </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Members & Trainers Directory -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Members Directory -->
+            <div class="bg-gray-100 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-users text-orange-500 mr-2"></i>
+                        Members Directory
+                    </h3>
+                    <span class="text-sm text-gray-600" id="memberCount">{{ $allMembers->count() }} members</span>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" id="memberSearch" 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm" 
+                               placeholder="Search members...">
+                    </div>
+                </div>
+
+                <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar" id="membersContainer">
+                    @forelse($allMembers->take(10) as $member)
+                        <a href="{{ route('trainer.members.show', $member) }}" class="member-item block bg-white rounded-lg p-3 hover:bg-gray-50 transition-all duration-200 group shadow-sm hover:shadow-md"
+                           data-name="{{ strtolower($member->name) }}"
+                           data-email="{{ strtolower($member->email) }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div class="flex-shrink-0">
+                                        @if($member->avatar)
+                                            <img src="{{ asset('storage/' . $member->avatar) }}?v={{ time() }}" 
+                                                 alt="{{ $member->name }}" 
+                                                 class="h-10 w-10 rounded-full object-cover shadow-md">
+                                        @else
+                                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                                {{ strtoupper(substr($member->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
+                                            {{ $member->name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500 truncate">{{ $member->email }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    @if($member->membership_type === 'vip')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500 text-gray-900">
+                                            VIP
+                                        </span>
+                                    @elseif($member->membership_type === 'premium')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white">
+                                            Premium
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600 text-gray-200">
+                                            Basic
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-user-slash text-4xl mb-2"></i>
+                            <p>No members found</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Trainers Directory -->
+            <div class="bg-gray-100 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-dumbbell text-green-500 mr-2"></i>
+                        Trainers Directory
+                    </h3>
+                    <span class="text-sm text-gray-600" id="trainerCount">{{ $allTrainers->count() }} trainers</span>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" id="trainerSearch" 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm" 
+                               placeholder="Search trainers...">
+                    </div>
+                </div>
+
+                <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar" id="trainersContainer">
+                    @forelse($allTrainers as $trainerItem)
+                        <a href="{{ route('trainer.trainers.show', $trainerItem) }}" class="trainer-item block bg-white rounded-lg p-3 hover:bg-gray-50 transition-all duration-200 group shadow-sm hover:shadow-md"
+                           data-name="{{ strtolower($trainerItem->name) }}"
+                           data-specialization="{{ strtolower($trainerItem->specialization ?? '') }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div class="flex-shrink-0">
+                                        @if($trainerItem->avatar)
+                                            <img src="{{ asset('storage/' . $trainerItem->avatar) }}?v={{ time() }}" 
+                                                 alt="{{ $trainerItem->name }}" 
+                                                 class="h-10 w-10 rounded-full object-cover shadow-md">
+                                        @else
+                                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                                {{ strtoupper(substr($trainerItem->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 truncate group-hover:text-green-600 transition-colors">
+                                            {{ $trainerItem->name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500 truncate">
+                                            @if($trainerItem->specialization)
+                                                {{ $trainerItem->specialization }}
+                                            @else
+                                                {{ $trainerItem->email }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white">
+                                        Trainer
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-user-slash text-4xl mb-2"></i>
+                            <p>No trainers found</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -794,9 +939,13 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
-                                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-md">
-                                        <span class="text-white font-bold text-lg">{{ substr($session->member->name, 0, 1) }}</span>
-                                    </div>
+                                    @if($session->member->avatar)
+                                        <img src="{{ asset('storage/' . $session->member->avatar) }}?v={{ time() }}" alt="{{ $session->member->name }}" class="h-12 w-12 rounded-full object-cover shadow-md">
+                                    @else
+                                        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-md">
+                                            <span class="text-white font-bold text-lg">{{ substr($session->member->name, 0, 1) }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-semibold text-gray-900">{{ $session->member->name }}</div>
@@ -836,9 +985,13 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
-                                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-md">
-                                        <span class="text-white font-bold text-lg">{{ substr($client->name, 0, 1) }}</span>
-                                    </div>
+                                    @if($client->avatar)
+                                        <img src="{{ asset('storage/' . $client->avatar) }}?v={{ time() }}" alt="{{ $client->name }}" class="h-12 w-12 rounded-full object-cover shadow-md">
+                                    @else
+                                        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-md">
+                                            <span class="text-white font-bold text-lg">{{ substr($client->name, 0, 1) }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-semibold text-gray-900">{{ $client->name }}</div>
@@ -1067,6 +1220,63 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }, 2000);
     }
+
+    // Members Directory Search
+    const memberSearch = document.getElementById('memberSearch');
+    const memberItems = document.querySelectorAll('.member-item');
+    const memberCount = document.getElementById('memberCount');
+    const totalMembers = memberItems.length;
+
+    if (memberSearch) {
+        memberSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            memberItems.forEach(item => {
+                const name = item.dataset.name || '';
+                const email = item.dataset.email || '';
+                
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update count
+            memberCount.textContent = `${visibleCount} of ${totalMembers} members`;
+        });
+    }
+
+    // Trainers Directory Search
+    const trainerSearch = document.getElementById('trainerSearch');
+    const trainerItems = document.querySelectorAll('.trainer-item');
+    const trainerCount = document.getElementById('trainerCount');
+    const totalTrainers = trainerItems.length;
+
+    if (trainerSearch) {
+        trainerSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            trainerItems.forEach(item => {
+                const name = item.dataset.name || '';
+                const specialization = item.dataset.specialization || '';
+                
+                if (name.includes(searchTerm) || specialization.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update count
+            trainerCount.textContent = `${visibleCount} of ${totalTrainers} trainers`;
+        });
+    }
 });
+
 </script>
 @endpush

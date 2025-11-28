@@ -87,16 +87,38 @@
                     <table class="min-w-full divide-y divide-gray-200 divide-opacity-30">
                         <thead class="bg-white bg-opacity-40">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Method</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="date" onclick="sortMembershipPaymentTable('date')">
+                                    Date
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="amount" onclick="sortMembershipPaymentTable('amount')">
+                                    Amount
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="method" onclick="sortMembershipPaymentTable('method')">
+                                    Method
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="status" onclick="sortMembershipPaymentTable('status')">
+                                    Status
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
+                                </th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Invoice
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 divide-opacity-30">
                             @foreach($payments as $p)
-                            <tr class="hover:bg-white hover:bg-opacity-30 transition">
+                            <tr class="hover:bg-white hover:bg-opacity-30 transition membership-payment-row"
+                                data-date="{{ $p->created_at->format('Y-m-d') }}"
+                                data-amount="{{ $p->amount }}"
+                                data-method="{{ $p->payment_method ?? 'card' }}"
+                                data-status="{{ $p->status }}">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ $p->created_at->format('M d, Y') }}
                                 </td>
@@ -202,5 +224,68 @@
         </div>
     </div>
 </div>
-@endsection
 
+@push('scripts')
+<script>
+// Table Sorting Functionality
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
+
+function sortMembershipPaymentTable(column) {
+    const tbody = document.querySelector('.membership-payment-row')?.closest('tbody');
+    if (!tbody) return;
+    
+    const rows = Array.from(tbody.querySelectorAll('.membership-payment-row'));
+    
+    // Toggle sort direction if same column
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+    
+    // Update sort icons
+    document.querySelectorAll('.sortable .sort-icon').forEach(icon => {
+        icon.className = 'fas fa-sort ml-1 text-gray-400 sort-icon';
+    });
+    
+    const currentHeader = document.querySelector(`.sortable[data-column="${column}"] .sort-icon`);
+    if (currentHeader) {
+        currentHeader.className = `fas fa-sort-${currentSortDirection === 'asc' ? 'up' : 'down'} ml-1 text-green-600 sort-icon`;
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch(column) {
+            case 'date':
+                aValue = new Date(a.dataset.date);
+                bValue = new Date(b.dataset.date);
+                break;
+            case 'amount':
+                aValue = parseFloat(a.dataset.amount);
+                bValue = parseFloat(b.dataset.amount);
+                break;
+            case 'method':
+            case 'status':
+                aValue = a.dataset[column].toLowerCase();
+                bValue = b.dataset[column].toLowerCase();
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+@endpush
+
+@endsection

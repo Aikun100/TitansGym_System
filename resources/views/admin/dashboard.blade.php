@@ -98,6 +98,32 @@
                 </div>
             </div>
 
+            <!-- Pending Approvals -->
+            <a href="{{ route('admin.approvals.index') }}" class="neuro-stat group hover:shadow-2xl transition-all duration-300">
+                <div class="p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-3 shadow-lg group-hover:scale-110 transition-transform">
+                                <i class="fas fa-user-clock text-2xl text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-600 truncate">Pending Approvals</dt>
+                                <dd class="text-2xl font-bold text-gray-900 mt-1">
+                                    {{ $pendingApprovalsCount ?? 0 }}
+                                    @if(($pendingApprovalsCount ?? 0) > 0)
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
+                                            New
+                                        </span>
+                                    @endif
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
             <!-- Total Revenue -->
             <div class="neuro-stat group">
                 <div class="p-6">
@@ -213,9 +239,13 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
-                                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-md">
-                                        <span class="text-white font-bold text-lg">{{ substr($member->name, 0, 1) }}</span>
-                                    </div>
+                                    @if($member->avatar)
+                                        <img src="{{ asset('storage/' . $member->avatar) }}?v={{ time() }}" alt="{{ $member->name }}" class="h-12 w-12 rounded-full object-cover shadow-md">
+                                    @else
+                                        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-md">
+                                            <span class="text-white font-bold text-lg">{{ substr($member->name, 0, 1) }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-semibold text-gray-900">{{ $member->name }}</div>
@@ -274,6 +304,93 @@
                     <div class="px-6 py-8 text-center text-gray-500">
                         <i class="fas fa-receipt text-4xl mb-2 opacity-50"></i>
                         <p>No recent payments</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <!-- Members & Trainers Directory --></ div>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-8">
+            <!-- Members Directory -->
+            <div class="neuro-card overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 border-opacity-50 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-users text-orange-600 mr-2"></i>
+                        Members Directory
+                    </h3>
+                    <span class="text-sm text-gray-500">{{ $allMembers->count() }} members</span>
+                </div>
+                <div class="divide-y divide-gray-200 divide-opacity-30 max-h-96 overflow-y-auto">
+                    @forelse($allMembers as $member)
+                    <a href="{{ route('admin.members.show', $member) }}" class="block px-6 py-3 hover:bg-white hover:bg-opacity-30 transition cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    @if($member->avatar)
+                                        <img src="{{ asset('storage/' . $member->avatar) }}?v={{ time() }}" alt="{{ $member->name }}" class="h-10 w-10 rounded-full object-cover shadow-sm">
+                                    @else
+                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-sm">
+                                            <span class="text-white font-bold text-sm">{{ substr($member->name, 0, 1) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-semibold text-gray-900">{{ $member->name }}</div>
+                                    <div class="text-xs text-gray-500">{{ $member->email }}</div>
+                                </div>
+                            </div>
+                            <span class="bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+                                {{ ucfirst($member->membership_type) }}
+                            </span>
+                        </div>
+                    </a>
+                    @empty
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-users text-4xl mb-2 opacity-50"></i>
+                        <p>No members found</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Trainers Directory -->
+            <div class="neuro-card overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 border-opacity-50 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-dumbbell text-green-600 mr-2"></i>
+                        Trainers Directory
+                    </h3>
+                    <span class="text-sm text-gray-500">{{ $allTrainers->count() }} trainers</span>
+                </div>
+                <div class="divide-y divide-gray-200 divide-opacity-30 max-h-96 overflow-y-auto">
+                    @forelse($allTrainers as $trainer)
+                    <a href="{{ route('admin.trainers.show', $trainer) }}" class="block px-6 py-3 hover:bg-white hover:bg-opacity-30 transition cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    @if($trainer->avatar)
+                                        <img src="{{ asset('storage/' . $trainer->avatar) }}" alt="{{ $trainer->name }}" class="h-10 w-10 rounded-full object-cover shadow-sm">
+                                    @else
+                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-sm">
+                                            <span class="text-white font-bold text-sm">{{ substr($trainer->name, 0, 1) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-semibold text-gray-900">{{ $trainer->name }}</div>
+                                    <div class="text-xs text-gray-500">{{ $trainer->specialization ?? 'Personal Trainer' }}</div>
+                                </div>
+                            </div>
+                            <span class="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+                                Trainer
+                            </span>
+                        </div>
+                    </a>
+                    @empty
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-dumbbell text-4xl mb-2 opacity-50"></i>
+                        <p>No trainers found</p>
                     </div>
                     @endforelse
                 </div>

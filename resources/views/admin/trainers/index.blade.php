@@ -80,22 +80,28 @@
 
         <!-- Search Bar -->
         <div class="glass-card rounded-xl p-4 mb-6">
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <div class="relative">
-                        <input type="text" 
-                            id="searchTrainers"
-                            placeholder="Search trainers by name, email, or specialization..." 
-                            class="w-full px-4 py-3 pl-10 glass-card rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <form action="{{ route('admin.trainers.index') }}" method="GET" id="filterForm">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                name="search"
+                                id="searchTrainers"
+                                value="{{ request('search') }}"
+                                placeholder="Search trainers by name, email, or specialization..." 
+                                class="w-full px-4 py-3 pl-10 glass-card rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
                     </div>
+                    <select name="status" 
+                            onchange="this.form.submit()"
+                            class="px-4 py-3 glass-card rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+                        <option value="">All Status</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
                 </div>
-                <select class="px-4 py-3 glass-card rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
+            </form>
         </div>
 
         <!-- Trainers Table -->
@@ -139,9 +145,13 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
-                                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-md">
-                                                <span class="text-white font-bold text-lg">{{ substr($trainer->name, 0, 1) }}</span>
-                                            </div>
+                                            @if($trainer->avatar)
+                                                <img src="{{ asset('storage/' . $trainer->avatar) }}" alt="{{ $trainer->name }}" class="h-12 w-12 rounded-full object-cover shadow-md">
+                                            @else
+                                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-md">
+                                                    <span class="text-white font-bold text-lg">{{ substr($trainer->name, 0, 1) }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-semibold text-gray-900">
@@ -251,16 +261,6 @@
 
 @push('scripts')
 <script>
-    document.getElementById('searchTrainers')?.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    });
-
     // Toggle trainer status
     function toggleTrainerStatus(trainerId, button) {
         if (!confirm('Are you sure you want to change this trainer\'s status?')) {

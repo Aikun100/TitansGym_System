@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="GymSystem — manage members, trainers, bookings and payments with an intuitive, modern interface.">
     <title>@yield('title', 'Gym Management System')</title>
     
@@ -176,6 +177,31 @@
             outline: none;
             border-color: var(--brand);
             box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+        }
+        
+        /* Fix input and select text colors for readability */
+        input[type="text"],
+        input[type="email"],
+        input[type="search"],
+        input[type="password"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="date"],
+        input[type="time"],
+        textarea,
+        select {
+            color: #1f2937 !important;
+        }
+        
+        input::placeholder,
+        textarea::placeholder {
+            color: #9ca3af !important;
+        }
+        
+        select option {
+            color: #374151 !important;
+            background-color: white !important;
         }
         
         /* ========== NEUMORPHISM STYLES ========== */
@@ -539,6 +565,51 @@
             background-color: #3a3a3a !important;
         }
         
+        /* Dark mode form inputs and labels */
+        .dark input[type="text"],
+        .dark input[type="email"],
+        .dark input[type="search"],
+        .dark input[type="password"],
+        .dark input[type="number"],
+        .dark input[type="tel"],
+        .dark input[type="url"],
+        .dark input[type="date"],
+        .dark input[type="time"],
+        .dark textarea,
+        .dark select {
+            background-color: #2d2d2d !important;
+            color: #e5e5e5 !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .dark input::placeholder,
+        .dark textarea::placeholder {
+            color: #808080 !important;
+        }
+        
+        .dark select option {
+            background-color: #2d2d2d !important;
+            color: #e5e5e5 !important;
+        }
+        
+        .dark label {
+            color: #d0d0d0 !important;
+        }
+        
+        /* Dark mode for specific text elements */
+        .dark .text-gray-700 {
+            color: #c0c0c0 !important;
+        }
+        
+        .dark .text-gray-800 {
+            color: #d0d0d0 !important;
+        }
+        
+        .dark .text-gray-900 {
+            color: #e5e5e5 !important;
+        }
+
+        
         /* Dark mode borders */
         .dark .border-gray-200 {
             border-color: rgba(255, 255, 255, 0.1) !important;
@@ -744,12 +815,82 @@
         .dark .text-gray-800 {
             color: #e5e5e5 !important;
         }
+        
+        /* WORKOUT SPLITS SPECIFIC DARK MODE FIXES */
+        /* Upper/Lower schedule boxes */
+        .dark .bg-blue-50.rounded.text-sm {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            color: #bfdbfe !important;
+        }
+        
+        /* PPL Badge backgrounds and text */
+        .dark .bg-red-100.rounded.text-xs {
+            background-color: rgba(239, 68, 68, 0.25) !important;
+            color: #fca5a5 !important;
+        }
+        
+        .dark .bg-blue-100.rounded.text-xs {
+            background-color: rgba(59, 130, 246, 0.25) !important;
+            color: #93c5fd !important;
+        }
+        
+        .dark .bg-yellow-100.rounded.text-xs {
+            background-color: rgba(234, 179, 8, 0.25) !important;
+            color: #fde047 !important;
+        }
+        
+        /* Advanced splits gradient cards */
+        .dark .bg-gradient-to-br.from-indigo-50 {
+            background: linear-gradient(to bottom right, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15)) !important;
+        }
+        
+        .dark .bg-gradient-to-br.from-red-50 {
+            background: linear-gradient(to bottom right, rgba(239, 68, 68, 0.15), rgba(249, 115, 22, 0.15)) !important;
+        }
+        
+        /* Text in gradient cards */
+        .dark .bg-gradient-to-br .text-gray-800,
+        .dark .bg-gradient-to-br .text-gray-700 {
+            color: #e5e7eb !important;
+        }
+        
+        .dark .bg-gradient-to-br .text-gray-900 {
+            color: #f3f4f6 !important;
+        }
+        
+        /* White backgrounds in dark mode */
+        .dark .bg-gradient-to-br .bg-white {
+            background-color: #374151 !important;
+        }
+        
+        /* Border colors */
+        .dark .border-indigo-200 {
+            border-color: rgba(99, 102, 241, 0.3) !important;
+        }
+        
+        .dark .border-red-200 {
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+        
+        /* Icon colors in dark mode */
+        .dark .text-indigo-600 {
+            color: #a5b4fc !important;
+        }
+        
+        .dark .text-red-600 {
+            color: #fca5a5 !important;
+        }
     
     </style>
+    
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    {{-- Page-specific styles --}}
+    @yield('styles')
     @stack('styles')
 </head>
 <body class="neuro-bg min-h-screen text-gray-800 bg-fixed">
@@ -828,5 +969,8 @@
             showToast('{{ session('info') }}', 'info');
         @endif
     </script>
+    
+    {{-- Page-specific scripts --}}
+    @yield('scripts')
 </body>
 </html>

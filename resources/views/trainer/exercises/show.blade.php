@@ -28,7 +28,7 @@
                             <i class="fas fa-tag mr-2"></i>
                             {{ ucfirst($exercise->category) }}
                         </span>
-                        @if($exercise->equipment && count($exercise->equipment) > 0)
+                        @if($exercise->equipment && is_array($exercise->equipment) && count($exercise->equipment) > 0)
                         <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-purple-100 text-purple-800 border-2 border-purple-200">
                             <i class="fas fa-dumbbell mr-2"></i>
                             {{ count($exercise->equipment) }} Equipment
@@ -64,6 +64,7 @@
                         <i class="fas fa-list-ol text-orange-600 mr-3 text-2xl"></i>
                         How to Perform
                     </h2>
+                    @if($exercise->steps && is_array($exercise->steps))
                     <div class="space-y-4">
                         @foreach($exercise->steps as $index => $step)
                         <div class="flex items-start p-4 bg-gradient-to-r from-orange-50 to-white rounded-lg hover:shadow-md transition-shadow">
@@ -74,10 +75,11 @@
                         </div>
                         @endforeach
                     </div>
+                    @endif
                 </div>
 
                 <!-- Tips & Safety -->
-                @if($exercise->tips && count($exercise->tips) > 0)
+                @if($exercise->tips && is_array($exercise->tips) && count($exercise->tips) > 0)
                 <div class="neuro-card p-8 bg-gradient-to-br from-green-50 to-white border-l-4 border-green-500">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                         <i class="fas fa-lightbulb text-green-600 mr-3 text-2xl"></i>
@@ -98,7 +100,7 @@
             <!-- Right Column - Sidebar -->
             <div class="space-y-6">
                 <!-- Quick Stats Card -->
-                <div class="neuro-card p-6 bg-gradient-to-br from-orange-500 to-red-600 text-white sticky top-6">
+                <div class="neuro-card p-6 bg-gradient-to-br from-orange-500 to-red-600 text-white">
                     <h2 class="text-xl font-bold mb-6 flex items-center">
                         <i class="fas fa-chart-bar mr-3 text-2xl"></i>
                         Quick Stats
@@ -112,7 +114,7 @@
                             <span class="text-white/90 font-medium">Difficulty</span>
                             <span class="font-bold text-lg">{{ ucfirst($exercise->difficulty_level) }}</span>
                         </div>
-                        @if($exercise->equipment)
+                        @if($exercise->equipment && is_array($exercise->equipment))
                         <div class="flex justify-between items-center">
                             <span class="text-white/90 font-medium">Equipment</span>
                             <span class="font-bold text-lg">{{ count($exercise->equipment) }} item(s)</span>
@@ -122,7 +124,7 @@
                 </div>
 
                 <!-- Equipment Required -->
-                @if($exercise->equipment && count($exercise->equipment) > 0)
+                @if($exercise->equipment && is_array($exercise->equipment) && count($exercise->equipment) > 0)
                 <div class="neuro-card p-6 bg-white">
                     <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                         <i class="fas fa-dumbbell text-orange-600 mr-3 text-xl"></i>
@@ -147,7 +149,7 @@
                         Targeted Muscles
                     </h2>
                     
-                    @if(isset($exercise->muscle_groups['primary']) && count($exercise->muscle_groups['primary']) > 0)
+                    @if(isset($exercise->muscle_groups['primary']) && is_array($exercise->muscle_groups['primary']) && count($exercise->muscle_groups['primary']) > 0)
                     <div class="mb-5">
                         <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Primary Muscles</h3>
                         <div class="space-y-2">
@@ -161,7 +163,7 @@
                     </div>
                     @endif
 
-                    @if(isset($exercise->muscle_groups['secondary']) && count($exercise->muscle_groups['secondary']) > 0)
+                    @if(isset($exercise->muscle_groups['secondary']) && is_array($exercise->muscle_groups['secondary']) && count($exercise->muscle_groups['secondary']) > 0)
                     <div>
                         <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Secondary Muscles</h3>
                         <div class="space-y-2">

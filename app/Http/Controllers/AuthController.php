@@ -33,6 +33,18 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
             
+            // Check approval status
+            if ($user->approval_status === 'pending') {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Your account is pending admin approval. Please wait for confirmation.']);
+            }
+            
+            if ($user->approval_status === 'rejected') {
+                Auth::logout();
+                $reason = $user->rejection_reason ? ' Reason: ' . $user->rejection_reason : '';
+                return back()->withErrors(['email' => 'Your registration has been rejected.' . $reason]);
+            }
+            
             if (!$user->is_active) {
                 Auth::logout();
                 return back()->withErrors(['email' => 'Your account is deactivated.']);
@@ -69,7 +81,8 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'sex' => $request->sex,
             'date_of_birth' => $request->date_of_birth,
-            'is_active' => $request->role === 'member' ? true : false,
+            'is_active' => false, // Set to false until approved
+            'approval_status' => 'pending', // New registrations require approval
         ];
 
         // Add role-specific fields
@@ -85,9 +98,8 @@ class AuthController extends Controller
 
         $user = User::create($userData);
 
-        Auth::login($user);
-
-        return redirect()->intended($this->getDashboardRoute($user->role));
+        // Don't auto-login, redirect to pending approval page
+        return redirect()->route('pending-approval')->with('email', $user->email);
     }
 
     public function logout(Request $request)

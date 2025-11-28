@@ -121,20 +121,30 @@
                     <table class="min-w-full divide-y divide-gray-200 divide-opacity-30">
                         <thead class="bg-white bg-opacity-40">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="date" onclick="sortProgressTable('date')">
                                     Date
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="weight" onclick="sortProgressTable('weight')">
                                     Weight
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="bodyfat" onclick="sortProgressTable('bodyfat')">
                                     Body Fat
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="muscle" onclick="sortProgressTable('muscle')">
                                     Muscle Mass
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors sortable"
+                                    data-column="bmi" onclick="sortProgressTable('bmi')">
                                     BMI
+                                    <i class="fas fa-sort ml-1 text-gray-400 sort-icon"></i>
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Actions
@@ -143,7 +153,12 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200 divide-opacity-30">
                             @foreach($progress as $record)
-                            <tr class="hover:bg-white hover:bg-opacity-30 transition">
+                            <tr class="hover:bg-white hover:bg-opacity-30 transition progress-row"
+                                data-date="{{ $record->record_date->format('Y-m-d') }}"
+                                data-weight="{{ $record->weight }}"
+                                data-bodyfat="{{ $record->body_fat_percentage }}"
+                                data-muscle="{{ $record->muscle_mass }}"
+                                data-bmi="{{ $record->bmi }}">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ $record->record_date->format('M d, Y') }}
@@ -193,4 +208,66 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// Table Sorting Functionality
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
+
+function sortProgressTable(column) {
+    const tbody = document.querySelector('.progress-row')?.closest('tbody');
+    if (!tbody) return;
+    
+    const rows = Array.from(tbody.querySelectorAll('.progress-row'));
+    
+    // Toggle sort direction if same column
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+    
+    // Update sort icons
+    document.querySelectorAll('.sortable .sort-icon').forEach(icon => {
+        icon.className = 'fas fa-sort ml-1 text-gray-400 sort-icon';
+    });
+    
+    const currentHeader = document.querySelector(`.sortable[data-column="${column}"] .sort-icon`);
+    if (currentHeader) {
+        currentHeader.className = `fas fa-sort-${currentSortDirection === 'asc' ? 'up' : 'down'} ml-1 text-orange-600 sort-icon`;
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch(column) {
+            case 'date':
+                aValue = new Date(a.dataset.date);
+                bValue = new Date(b.dataset.date);
+                break;
+            case 'weight':
+            case 'bodyfat':
+            case 'muscle':
+            case 'bmi':
+                aValue = parseFloat(a.dataset[column]);
+                bValue = parseFloat(b.dataset[column]);
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+@endpush
+
 @endsection

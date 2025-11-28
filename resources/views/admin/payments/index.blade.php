@@ -156,9 +156,13 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
-                                            <div class="h-8 w-8 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-sm">
-                                                <span class="text-white font-bold text-xs">{{ substr($payment->member->name, 0, 1) }}</span>
-                                            </div>
+                                            @if($payment->member->avatar)
+                                                <img src="{{ asset('storage/' . $payment->member->avatar) }}" alt="{{ $payment->member->name }}" class="h-8 w-8 rounded-full object-cover shadow-sm">
+                                            @else
+                                                <div class="h-8 w-8 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-sm">
+                                                    <span class="text-white font-bold text-xs">{{ substr($payment->member->name, 0, 1) }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="ml-3">
                                             <div class="text-sm font-semibold text-gray-900">

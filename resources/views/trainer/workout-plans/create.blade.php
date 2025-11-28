@@ -95,6 +95,15 @@
                                   placeholder="Describe the workout plan, including focus areas, intensity, and any special instructions...">{{ old('description') }}</textarea>
                     </div>
 
+                    <!-- Exercise Recommendations -->
+                    <div>
+                        <label for="exercise_recommendations" class="block text-sm font-medium text-gray-700">Exercise Recommendations (Optional)</label>
+                        <textarea name="exercise_recommendations" id="exercise_recommendations" rows="4"
+                                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Suggest specific exercises for this member (e.g., Squats, Bench Press, Deadlifts, etc.)">{{ old('exercise_recommendations') }}</textarea>
+                        <p class="mt-1 text-sm text-gray-500">Provide exercise suggestions that align with the member's goals and fitness level.</p>
+                    </div>
+
                     <!-- Note about exercises -->
                     <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <div class="flex">

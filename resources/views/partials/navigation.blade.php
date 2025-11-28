@@ -2,94 +2,145 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <a href="{{ url('/') }}" class="text-white text-xl font-bold flex items-center">
-                        <i class="fas fa-dumbbell mr-2"></i>
+                <div class="flex-shrink-0 mr-8">
+                    <a href="{{ url('/') }}" class="text-white text-xl font-bold flex items-center hover:text-orange-400 transition-colors duration-200">
+                        <i class="fas fa-dumbbell mr-2 text-orange-500"></i>
                         <span>TitansGym</span>
                     </a>
                 </div>
                 
                 <!-- Desktop links -->
                 @auth
-                <div class="hidden md:ml-8 md:flex md:items-center md:space-x-1">
+                <div class="hidden md:flex md:items-center md:space-x-2">
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" 
-                           class="{{ request()->routeIs('admin.dashboard') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-home mr-1.5"></i>Dashboard
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-home mr-2"></i>Dashboard
+                            @if(request()->routeIs('admin.dashboard'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('admin.members.index') }}" 
-                           class="{{ request()->routeIs('admin.members.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-users mr-1.5"></i>Members
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.members.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-users mr-2"></i>Members
+                            @if(request()->routeIs('admin.members.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('admin.trainers.index') }}" 
-                           class="{{ request()->routeIs('admin.trainers.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-user-tie mr-1.5"></i>Trainers
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.trainers.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-user-tie mr-2"></i>Trainers
+                            @if(request()->routeIs('admin.trainers.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('admin.payments.index') }}" 
-                           class="{{ request()->routeIs('admin.payments.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-dollar-sign mr-1.5"></i>Payments
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.payments.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-dollar-sign mr-2"></i>Payments
+                            @if(request()->routeIs('admin.payments.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('admin.reports.index') }}" 
-                           class="{{ request()->routeIs('admin.reports.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-chart-bar mr-1.5"></i>Reports
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.reports.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-chart-bar mr-2"></i>Reports
+                            @if(request()->routeIs('admin.reports.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                     @elseif(auth()->user()->isTrainer())
                         <a href="{{ route('trainer.dashboard') }}" 
-                           class="{{ request()->routeIs('trainer.dashboard') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-home mr-1.5"></i>Dashboard
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('trainer.dashboard') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-home mr-2"></i>Dashboard
+                            @if(request()->routeIs('trainer.dashboard'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('trainer.bookings.index') }}" 
-                           class="{{ request()->routeIs('trainer.bookings.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-calendar-check mr-1.5"></i>Bookings
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('trainer.bookings.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-calendar-check mr-2"></i>Bookings
+                            @if(request()->routeIs('trainer.bookings.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('trainer.workout-plans.index') }}" 
-                           class="{{ request()->routeIs('trainer.workout-plans.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-clipboard-list mr-1.5"></i>Workout Plans
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('trainer.workout-plans.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-clipboard-list mr-2"></i>Plans
+                            @if(request()->routeIs('trainer.workout-plans.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('trainer.workout-splits.index') }}" 
-                           class="{{ request()->routeIs('trainer.workout-splits.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-calendar-week mr-1.5"></i>Splits
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('trainer.workout-splits.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-calendar-week mr-2"></i>Splits
+                            @if(request()->routeIs('trainer.workout-splits.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('trainer.attendance.index') }}" 
-                           class="{{ request()->routeIs('trainer.attendance.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-user-check mr-1.5"></i>Attendance
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('trainer.attendance.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-user-check mr-2"></i>Attendance
+                            @if(request()->routeIs('trainer.attendance.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                     @elseif(auth()->user()->isMember())
                         <a href="{{ route('member.dashboard') }}" 
-                           class="{{ request()->routeIs('member.dashboard') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-home mr-1.5"></i>Dashboard
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.dashboard') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-home mr-2"></i>Dashboard
+                            @if(request()->routeIs('member.dashboard'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('member.exercises.index') }}" 
-                           class="{{ request()->routeIs('member.exercises.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-dumbbell mr-1.5"></i>Exercises
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.exercises.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-dumbbell mr-2"></i>Exercises
+                            @if(request()->routeIs('member.exercises.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('member.workout-splits.index') }}" 
-                           class="{{ request()->routeIs('member.workout-splits.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-calendar-week mr-1.5"></i>Splits
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.workout-splits.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-calendar-week mr-2"></i>Splits
+                            @if(request()->routeIs('member.workout-splits.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         
                         <!-- Divider -->
-                        <div class="h-6 w-px bg-gray-600 mx-2"></div>
+                        <div class="h-8 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent mx-3"></div>
                         
                         <a href="{{ route('member.bookings.index') }}" 
-                           class="{{ request()->routeIs('member.bookings.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-calendar-alt mr-1.5"></i>Bookings
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.bookings.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-calendar-alt mr-2"></i>Bookings
+                            @if(request()->routeIs('member.bookings.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('member.progress.index') }}" 
-                           class="{{ request()->routeIs('member.progress.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-chart-line mr-1.5"></i>Progress
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.progress.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-chart-line mr-2"></i>Progress
+                            @if(request()->routeIs('member.progress.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         
                         <!-- Divider -->
-                        <div class="h-6 w-px bg-gray-600 mx-2"></div>
+                        <div class="h-8 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent mx-3"></div>
                         
                         <a href="{{ route('member.payments.index') }}" 
-                           class="{{ request()->routeIs('member.payments.*') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-credit-card mr-1.5"></i>Payments
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.payments.*') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-credit-card mr-2"></i>Payments
+                            @if(request()->routeIs('member.payments.*'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                         <a href="{{ route('member.membership') }}" 
-                           class="{{ request()->routeIs('member.membership') ? 'bg-orange-600' : '' }} text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-all duration-200">
-                            <i class="fas fa-id-card mr-1.5"></i>Membership
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('member.membership') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-id-card mr-2"></i>Membership
+                            @if(request()->routeIs('member.membership'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
                         </a>
                     @endif
                 </div>
@@ -110,6 +161,21 @@
                     <div class="hidden sm:flex items-center space-x-4">
                         <span class="text-white text-sm">Welcome, {{ auth()->user()->name }}</span>
                         <span class="bg-gradient-to-r from-orange-600 to-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">{{ ucfirst(auth()->user()->role) }}</span>
+                        
+                        <!-- Profile Icon Button -->
+                        <a href="{{ route(auth()->user()->role . '.profile') }}" 
+                           class="flex items-center justify-center w-12 h-12 min-w-[48px] min-h-[48px] rounded-full hover:shadow-xl hover:shadow-orange-500/50 transition-all duration-200 shadow-lg group ring-2 ring-orange-400/30 hover:ring-orange-400/60 aspect-square overflow-hidden {{ auth()->user()->avatar ? '' : 'bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700' }}"
+                           title="View Profile">
+                            @if(auth()->user()->avatar)
+                                <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover">
+                            @else
+                                <i class="fas fa-user text-white text-lg group-hover:scale-110 transition-transform duration-200"></i>
+                            @endif
+                        </a>
+                        
+                        <!-- Notification Bell -->
+                        @include('components.notification-bell')
+                        
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="text-white hover:text-gray-200 text-sm">

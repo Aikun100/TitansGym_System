@@ -34,18 +34,76 @@
                         Select Trainer
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @foreach($trainers as $trainer)
-                        <label class="relative flex items-start p-4 cursor-pointer glass-card rounded-lg hover:bg-blue-50 transition border-2 border-transparent hover:border-orange-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="trainer-grid">
+                        @foreach($trainers as $index => $trainer)
+                        <label class="relative flex items-start p-4 cursor-pointer glass-card rounded-lg hover:bg-blue-50 transition border-2 border-transparent hover:border-orange-200 group trainer-card" data-index="{{ $index }}">
                             <div class="flex items-center h-5">
                                 <input type="radio" name="trainer_id" value="{{ $trainer->id }}" required
                                        {{ old('trainer_id') == $trainer->id ? 'checked' : '' }}
                                        class="focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300">
                             </div>
-                            <div class="ml-3">
+                            <div class="ml-3 flex-1">
                                 <span class="block text-sm font-medium text-gray-900">{{ $trainer->name }}</span>
                                 <span class="block text-sm text-gray-500">{{ $trainer->specialization }}</span>
                                 <span class="block text-xs text-orange-600 mt-1">₱{{ number_format($trainer->hourly_rate, 2) }}/hr</span>
+                            </div>
+                            
+                            <!-- Hover Tooltip Card - Single tooltip with conditional positioning -->
+                            <div class="absolute top-0 z-50 hidden group-hover:block w-80 pointer-events-none {{ $index % 2 == 0 ? 'right-full mr-4' : 'left-full ml-4' }}">
+                                <div class="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 transform transition-all duration-200 animate-fade-in">
+                                    <!-- Trainer Header -->
+                                    <div class="flex items-center mb-4">
+                                        @if($trainer->avatar)
+                                            <img src="{{ asset('storage/' . $trainer->avatar) }}?v={{ time() }}" alt="{{ $trainer->name }}" class="w-16 h-16 rounded-full object-cover shadow-lg flex-shrink-0">
+                                        @else
+                                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center mr-4 shadow-lg flex-shrink-0">
+                                                <i class="fas fa-user text-white text-2xl"></i>
+                                            </div>
+                                        @endif
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-lg font-bold text-gray-900 truncate">{{ $trainer->name }}</h4>
+                                            <p class="text-sm text-gray-600 truncate">{{ $trainer->specialization }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Trainer Details -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-envelope text-orange-600 w-5 mr-2 flex-shrink-0"></i>
+                                            <span class="text-gray-700 truncate">{{ $trainer->email }}</span>
+                                        </div>
+                                        @if($trainer->phone)
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-phone text-green-600 w-5 mr-2 flex-shrink-0"></i>
+                                            <span class="text-gray-700">{{ $trainer->phone }}</span>
+                                        </div>
+                                        @endif
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-dollar-sign text-purple-600 w-5 mr-2 flex-shrink-0"></i>
+                                            <span class="text-gray-700 font-semibold">₱{{ number_format($trainer->hourly_rate, 2) }} per hour</span>
+                                        </div>
+                                        @if($trainer->experience_years)
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-award text-yellow-600 w-5 mr-2 flex-shrink-0"></i>
+                                            <span class="text-gray-700">{{ $trainer->experience_years }} years experience</span>
+                                        </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Stats -->
+                                    <div class="mt-4 pt-4 border-t border-gray-200">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="text-center bg-orange-50 rounded-lg p-3">
+                                                <div class="text-xl font-bold text-orange-600">{{ $trainer->bookings()->completed()->count() }}</div>
+                                                <div class="text-xs text-gray-600 mt-1">Completed Sessions</div>
+                                            </div>
+                                            <div class="text-center bg-green-50 rounded-lg p-3">
+                                                <div class="text-xl font-bold text-green-600">{{ $trainer->workoutPlans()->active()->count() }}</div>
+                                                <div class="text-xs text-gray-600 mt-1">Active Plans</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </label>
                         @endforeach

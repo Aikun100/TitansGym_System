@@ -27,9 +27,13 @@
         <div class="glass-card rounded-xl p-6 mb-6">
             <div class="flex items-center space-x-6">
                 <div class="flex-shrink-0">
-                    <div class="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-lg">
-                        <span class="text-white font-bold text-4xl">{{ substr($member->name, 0, 1) }}</span>
-                    </div>
+                    @if($member->avatar)
+                        <img src="{{ asset('storage/' . $member->avatar) }}?v={{ time() }}" alt="{{ $member->name }}" class="h-24 w-24 rounded-full object-cover shadow-lg">
+                    @else
+                        <div class="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center shadow-lg">
+                            <span class="text-white font-bold text-4xl">{{ substr($member->name, 0, 1) }}</span>
+                        </div>
+                    @endif
                 </div>
                 <div class="flex-1">
                     <h2 class="text-2xl font-bold text-gray-900">{{ $member->name }}</h2>
@@ -153,10 +157,51 @@
                         <label class="text-sm font-semibold text-gray-600">Membership Type</label>
                         <p class="mt-1 text-gray-900 capitalize">{{ ucfirst($member->membership_type) }}</p>
                     </div>
+                    
                     <div>
                         <label class="text-sm font-semibold text-gray-600">Membership Expiry</label>
                         <p class="mt-1 text-gray-900">{{ $member->membership_expiry->format('M d, Y') }}</p>
+                        
+                        @php
+                            $now = \Carbon\Carbon::now();
+                            $expiry = \Carbon\Carbon::parse($member->membership_expiry);
+                            $daysUntilExpiry = $now->diffInDays($expiry, false);
+                            $isExpired = $daysUntilExpiry < 0;
+                            $isExpiringSoon = $daysUntilExpiry >= 0 && $daysUntilExpiry <= 7;
+                        @endphp
+                        
+                        @if($isExpired)
+                            <div class="mt-2 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                                    <p class="text-sm font-medium text-red-800">
+                                        Expired {{ abs($daysUntilExpiry) }} {{ abs($daysUntilExpiry) == 1 ? 'day' : 'days' }} ago
+                                    </p>
+                                </div>
+                                <p class="text-xs text-red-700 mt-1">Member needs to renew their membership</p>
+                            </div>
+                        @elseif($isExpiringSoon)
+                            <div class="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                                    <p class="text-sm font-medium text-yellow-800">
+                                        Expires in {{ $daysUntilExpiry }} {{ $daysUntilExpiry == 1 ? 'day' : 'days' }}
+                                    </p>
+                                </div>
+                                <p class="text-xs text-yellow-700 mt-1">Membership expiring soon - consider renewal reminder</p>
+                            </div>
+                        @else
+                            <div class="mt-2 p-3 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                    <p class="text-sm font-medium text-green-800">
+                                        {{ $daysUntilExpiry }} {{ $daysUntilExpiry == 1 ? 'day' : 'days' }} remaining
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
+                    
                     <div>
                         <label class="text-sm font-semibold text-gray-600">Account Status</label>
                         <p class="mt-1">
@@ -174,12 +219,20 @@
                     <div>
                         <label class="text-sm font-semibold text-gray-600">Membership Status</label>
                         <p class="mt-1">
-                            @if($member->membership_status === 'active')
+                            @if($isExpired)
+                                <span class="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+                                    <i class="fas fa-times-circle mr-1"></i>Expired
+                                </span>
+                            @elseif($isExpiringSoon)
+                                <span class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+                                    <i class="fas fa-clock mr-1"></i>Expiring Soon
+                                </span>
+                            @elseif($member->membership_status === 'active')
                                 <span class="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm">
-                                    Active
+                                    <i class="fas fa-check-circle mr-1"></i>Active
                                 </span>
                             @else
-                                <span class="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm capitalize">
+                                <span class="bg-gradient-to-r from-gray-500 to-gray-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm capitalize">
                                     {{ $member->membership_status }}
                                 </span>
                             @endif
@@ -277,6 +330,28 @@
                 @endif
             </div>
         </div>
+
+        <!-- Photo Album -->
+        @if(isset($photos) && $photos->count() > 0)
+        <div class="glass-card rounded-xl p-6 lg:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-images text-purple-600 mr-2"></i>
+                Photo Album
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @foreach($photos as $photo)
+                    <div class="relative group">
+                        <img src="{{ asset('storage/' . $photo->photo_path) }}" alt="{{ $photo->caption }}" class="w-full h-48 object-cover rounded-lg shadow-md">
+                        @if($photo->caption)
+                            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-sm p-2 rounded-b-lg">
+                                {{ $photo->caption }}
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection

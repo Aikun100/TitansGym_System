@@ -30,6 +30,10 @@ class User extends Authenticatable
         'experience_years',
         'hourly_rate',
         'is_active',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
     ];
 
     protected $hidden = [
@@ -59,6 +63,30 @@ class User extends Authenticatable
         return $this->hasMany(Booking::class, 'trainer_id');
     }
 
+    /**
+     * Get trainer's photo album
+     */
+    public function trainerPhotos()
+    {
+        return $this->hasMany(TrainerPhoto::class)->orderBy('order');
+    }
+
+    /**
+     * Get the member's photos
+     */
+    public function memberPhotos()
+    {
+        return $this->hasMany(MemberPhoto::class)->orderBy('order');
+    }
+
+    /**
+     * Get the admin who approved this user
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     public function workoutPlans()
     {
         return $this->hasMany(WorkoutPlan::class, 'trainer_id');
@@ -83,6 +111,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Progress::class, 'member_id');
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
 
     // Scopes
     public function scopeMembers($query)

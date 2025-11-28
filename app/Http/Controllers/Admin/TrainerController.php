@@ -11,16 +11,31 @@ use Illuminate\Validation\Rule;
 
 class TrainerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
-        $trainers = User::trainers()
-            ->withCount(['trainerBookings', 'workoutPlans'])
-            ->latest()
-            ->paginate(10);
+        $query = User::trainers()->withCount(['trainerBookings', 'workoutPlans']);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('specialization', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $isActive = $request->status === 'active';
+            $query->where('is_active', $isActive);
+        }
+
+        $trainers = $query->latest()->paginate(10)->appends($request->query());
 
         return view('admin.trainers.index', compact('trainers'));
     }
@@ -75,7 +90,34 @@ class TrainerController extends Controller
         $trainer->loadCount(['trainerBookings', 'workoutPlans']);
         $trainer->load(['trainerBookings.member', 'workoutPlans.member']);
 
-        return view('admin.trainers.show', compact('trainer'));
+        // Calculate statistics
+        $clientsCount = $trainer->trainerBookings()->distinct('member_id')->count('member_id');
+        $sessionsCount = $trainer->trainerBookings()->count();
+        $workoutPlansCount = $trainer->workoutPlans()->count();
+
+        // Get trainer's photos
+        $photos = $trainer->trainerPhotos;
+
+        // Get trainer's reviews
+        $reviews = \App\Models\TrainerReview::where('trainer_id', $trainer->id)
+            ->with('member')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate average rating
+        $averageRating = $reviews->avg('rating');
+        $totalReviews = $reviews->count();
+
+        // Calculate star distribution
+        $starDistribution = [
+            5 => $reviews->where('rating', 5)->count(),
+            4 => $reviews->where('rating', 4)->count(),
+            3 => $reviews->where('rating', 3)->count(),
+            2 => $reviews->where('rating', 2)->count(),
+            1 => $reviews->where('rating', 1)->count(),
+        ];
+
+        return view('admin.trainers.show', compact('trainer', 'clientsCount', 'sessionsCount', 'workoutPlansCount', 'photos', 'reviews', 'averageRating', 'totalReviews', 'starDistribution'));
     }
 
     public function edit(User $trainer)

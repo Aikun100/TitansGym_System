@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,73 +11,81 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 40px 20px;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         h1 {
             text-align: center;
             color: white;
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3rem);
             margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
         }
-        
+
         .subtitle {
             text-align: center;
-            color: rgba(255,255,255,0.9);
-            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
             margin-bottom: 3rem;
+            padding: 0 1rem;
+            line-height: 1.5;
         }
-        
+
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
             margin-bottom: 40px;
         }
-        
+
         .card {
             background: white;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        
+
         .card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
         }
-        
+
         .card h2 {
             color: #1f2937;
-            font-size: 1.5rem;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
             margin-bottom: 1rem;
             text-align: center;
+            font-weight: 600;
         }
-        
+
         .animation-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 200px;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border-radius: 12px;
+            padding: 20px;
         }
-        
+
         .animation-container img {
             max-width: 100%;
             height: auto;
+            border-radius: 8px;
         }
-        
+
         .info {
             background: rgba(249, 115, 22, 0.1);
             border-left: 4px solid #f97316;
@@ -84,76 +93,433 @@
             border-radius: 8px;
             margin-top: 20px;
         }
-        
+
         .info h3 {
             color: #f97316;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
             margin-bottom: 0.5rem;
+            font-weight: 600;
         }
-        
+
         .info p {
             color: #6b7280;
-            font-size: 0.9rem;
+            font-size: clamp(0.85rem, 1.8vw, 0.9rem);
             line-height: 1.6;
         }
-        
+
         .features {
             background: white;
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
-        
+
         .features h2 {
             color: #1f2937;
-            font-size: 2rem;
+            font-size: clamp(1.5rem, 4vw, 2rem);
             margin-bottom: 2rem;
             text-align: center;
+            font-weight: 700;
         }
-        
+
         .feature-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
-        
+
         .feature-item {
             display: flex;
             align-items: start;
             gap: 15px;
+            padding: 10px;
+            border-radius: 12px;
+            transition: background 0.3s ease;
         }
-        
+
+        .feature-item:hover {
+            background: rgba(249, 115, 22, 0.05);
+        }
+
         .feature-icon {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             background: linear-gradient(135deg, #f97316, #ea580c);
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
         }
-        
+
         .feature-content h3 {
             color: #1f2937;
-            font-size: 1.1rem;
+            font-size: clamp(1rem, 2.2vw, 1.1rem);
             margin-bottom: 0.5rem;
+            font-weight: 600;
         }
-        
+
         .feature-content p {
             color: #6b7280;
-            font-size: 0.9rem;
-            line-height: 1.5;
+            font-size: clamp(0.85rem, 1.8vw, 0.9rem);
+            line-height: 1.6;
+        }
+
+        /* Nest Hub & Nest Hub Max (smart displays) - 1024px to 1280px */
+        @media (min-width: 1024px) and (max-width: 1280px) {
+            .container {
+                max-width: 95%;
+            }
+
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .feature-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Large Tablets & iPad Pro (1024px and below) */
+        @media (max-width: 1024px) {
+            body {
+                padding: 35px 20px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 28px;
+            }
+
+            .card {
+                padding: 28px;
+            }
+
+            .features {
+                padding: 35px 30px;
+            }
+
+            .feature-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 22px;
+            }
+        }
+
+        /* Foldable Devices - Galaxy Z Fold 5, Asus Zenbook Fold (768px to 884px) */
+        @media (min-width: 768px) and (max-width: 884px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+
+            .feature-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Standard Tablets & iPad Air/Mini (768px and below) */
+        @media (max-width: 768px) {
+            body {
+                padding: 30px 18px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .animation-container {
+                min-height: 180px;
+                padding: 15px;
+            }
+
+            .features {
+                padding: 30px 25px;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .feature-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Surface Duo (dual screen) - 540px to 720px */
+        @media (min-width: 540px) and (max-width: 720px) {
+            .container {
+                max-width: 100%;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 22px;
+            }
+        }
+
+        /* Large Phones & Phablets - Galaxy S20 Ultra, iPhone 14 Pro Max (640px and below) */
+        @media (max-width: 640px) {
+            body {
+                padding: 25px 16px;
+            }
+
+            h1 {
+                margin-bottom: 0.85rem;
+            }
+
+            .subtitle {
+                margin-bottom: 2.5rem;
+            }
+
+            .grid {
+                gap: 22px;
+            }
+
+            .card {
+                padding: 22px;
+                border-radius: 18px;
+            }
+
+            .animation-container {
+                min-height: 170px;
+                padding: 14px;
+            }
+
+            .features {
+                padding: 28px 22px;
+            }
+
+            .feature-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Standard Phones - iPhone 12 Pro, Pixel 7, Galaxy S8+ (480px and below) */
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 14px;
+            }
+
+            h1 {
+                margin-bottom: 0.75rem;
+            }
+
+            .subtitle {
+                margin-bottom: 2rem;
+            }
+
+            .grid {
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .card {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .card:hover {
+                transform: translateY(-5px);
+            }
+
+            .animation-container {
+                min-height: 160px;
+                padding: 12px;
+            }
+
+            .info {
+                padding: 12px;
+                margin-top: 15px;
+            }
+
+            .features {
+                padding: 25px 20px;
+                border-radius: 16px;
+            }
+
+            .features h2 {
+                margin-bottom: 1.5rem;
+            }
+
+            .feature-item {
+                gap: 12px;
+                padding: 8px;
+            }
+
+            .feature-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Small Phones - iPhone SE, iPhone XR (375px and below) */
+        @media (max-width: 375px) {
+            body {
+                padding: 18px 12px;
+            }
+
+            h1 {
+                margin-bottom: 0.7rem;
+            }
+
+            .subtitle {
+                margin-bottom: 1.8rem;
+            }
+
+            .grid {
+                gap: 18px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 14px;
+            }
+
+            .animation-container {
+                min-height: 140px;
+                padding: 10px;
+            }
+
+            .info {
+                padding: 10px;
+                margin-top: 12px;
+            }
+
+            .features {
+                padding: 22px 18px;
+            }
+
+            .feature-item {
+                gap: 10px;
+                padding: 6px;
+            }
+
+            .feature-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 1.15rem;
+            }
+        }
+
+        /* Extra Small Phones - Galaxy A51/71, Older Android (320px and below) */
+        @media (max-width: 320px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            h1 {
+                margin-bottom: 0.6rem;
+            }
+
+            .subtitle {
+                margin-bottom: 1.5rem;
+            }
+
+            .grid {
+                gap: 15px;
+                margin-bottom: 25px;
+            }
+
+            .card {
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .card h2 {
+                margin-bottom: 0.8rem;
+            }
+
+            .animation-container {
+                min-height: 120px;
+                padding: 8px;
+            }
+
+            .info {
+                padding: 10px;
+                margin-top: 10px;
+            }
+
+            .features {
+                padding: 20px 15px;
+            }
+
+            .features h2 {
+                margin-bottom: 1.2rem;
+            }
+
+            .feature-item {
+                gap: 10px;
+                padding: 5px;
+            }
+
+            .feature-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Landscape Orientation for Phones */
+        @media (max-width: 896px) and (orientation: landscape) {
+            body {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: clamp(1.5rem, 4vw, 2.5rem);
+                margin-bottom: 0.5rem;
+            }
+
+            .subtitle {
+                margin-bottom: 1.5rem;
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                margin-bottom: 25px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .animation-container {
+                min-height: 140px;
+                padding: 10px;
+            }
+
+            .features {
+                padding: 25px 20px;
+            }
+
+            .feature-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🏋️ Exercise Animations</h1>
         <p class="subtitle">Professional animated demonstrations for your fitness dashboard</p>
-        
+
         <div class="grid">
             <!-- Bench Press -->
             <div class="card">
@@ -163,10 +529,11 @@
                 </div>
                 <div class="info">
                     <h3>Movement Pattern</h3>
-                    <p>Lower the barbell to chest, pause, then press back up. Smooth 4-second loop with directional arrows showing down and press phases.</p>
+                    <p>Lower the barbell to chest, pause, then press back up. Smooth 4-second loop with directional
+                        arrows showing down and press phases.</p>
                 </div>
             </div>
-            
+
             <!-- Squat -->
             <div class="card">
                 <h2>Squat</h2>
@@ -175,10 +542,11 @@
                 </div>
                 <div class="info">
                     <h3>Movement Pattern</h3>
-                    <p>Sit back into squat position, then drive up through heels. Features extended arms for balance and clear up/down indicators.</p>
+                    <p>Sit back into squat position, then drive up through heels. Features extended arms for balance
+                        and clear up/down indicators.</p>
                 </div>
             </div>
-            
+
             <!-- Deadlift -->
             <div class="card">
                 <h2>Deadlift</h2>
@@ -187,11 +555,12 @@
                 </div>
                 <div class="info">
                     <h3>Movement Pattern</h3>
-                    <p>Hip hinge to grip barbell, then lift with proper form. Shows complete range of motion with lift and lower arrows.</p>
+                    <p>Hip hinge to grip barbell, then lift with proper form. Shows complete range of motion with lift
+                        and lower arrows.</p>
                 </div>
             </div>
         </div>
-        
+
         <!-- Features Section -->
         <div class="features">
             <h2>✨ Animation Features</h2>
@@ -203,7 +572,7 @@
                         <p>4-second seamless loops with ease-in-out timing for natural movement</p>
                     </div>
                 </div>
-                
+
                 <div class="feature-item">
                     <div class="feature-icon">➡️</div>
                     <div class="feature-content">
@@ -211,15 +580,15 @@
                         <p>Color-coded arrows (orange for down, green for up) show movement direction</p>
                     </div>
                 </div>
-                
+
                 <div class="feature-item">
                     <div class="feature-icon">🎨</div>
                     <div class="feature-content">
                         <h3>Clean Design</h3>
-                    <p>Professional styling with gradients, distinct body posture, and clear labels</p>
+                        <p>Professional styling with gradients, distinct body posture, and clear labels</p>
                     </div>
                 </div>
-                
+
                 <div class="feature-item">
                     <div class="feature-icon">⚡</div>
                     <div class="feature-content">
@@ -227,7 +596,7 @@
                         <p>SVG format ensures fast loading and perfect scaling at any size</p>
                     </div>
                 </div>
-                
+
                 <div class="feature-item">
                     <div class="feature-icon">🔄</div>
                     <div class="feature-content">
@@ -235,7 +604,7 @@
                         <p>Animations play automatically and loop infinitely without user interaction</p>
                     </div>
                 </div>
-                
+
                 <div class="feature-item">
                     <div class="feature-icon">📱</div>
                     <div class="feature-content">
@@ -247,4 +616,5 @@
         </div>
     </div>
 </body>
+
 </html>
