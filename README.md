@@ -304,11 +304,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 👨‍💻 Author
+## 👥 Contributors
 
+### Original Author
 **Aikun100**
 - GitHub: [@Aikun100](https://github.com/Aikun100)
 - Repository: [TitansGym_System](https://github.com/Aikun100/TitansGym_System)
+- Role: Original creator and main developer
+
+### Contributors
+**Raijin Bias Alah**
+- GitHub: [@raijinbiasalah08](https://github.com/raijinbiasalah08)
+- Repository: [gym](https://github.com/raijinbiasalah08/gym)
+- Contributions:
+  - Enhanced calendar view with modern neumorphic design
+  - Fixed booking display functionality
+  - Improved UI/UX with glassmorphism effects
+  - Added responsive design improvements
+  - Calendar data formatting fixes
 
 ---
 
