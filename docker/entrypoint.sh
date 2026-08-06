@@ -3,6 +3,16 @@
 # Exit on error
 set -e
 
+# Ensure required Laravel framework directories exist
+echo "Setting up storage directories..."
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/logs
+
+# Fix permissions dynamically
+chown -R www-data:www-data storage bootstrap/cache
+
 # Cache configuration, routes, and views for production optimization
 echo "Caching configuration and routes..."
 php artisan config:cache
