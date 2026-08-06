@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { COLORS, SIZES, SHADOWS } from '../../constants/theme';
-import { socialApi } from '../../services/api';
+import { socialApi, getApiBaseUrl } from '../../services/api';
 import { useApp } from '../../context/AppContext';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👏', '🔥'];
@@ -109,8 +109,6 @@ export default function CommunityMessagesScreen() {
   const route = useRoute<any>();
   const friendId = route.params?.friendId || '1';
   const friendName = route.params?.friendName || 'Friend';
-  const friendAvatarRaw = route.params?.friendAvatar;
-  const friendAvatar = (friendAvatarRaw && friendAvatarRaw !== 'https://via.placeholder.com/150') ? friendAvatarRaw : null;
   const { user } = useApp();
   const insets = useSafeAreaInsets();
   const flatRef = useRef<FlatList>(null);
@@ -130,9 +128,50 @@ export default function CommunityMessagesScreen() {
   const [reactionTarget, setReactionTarget] = useState<string | null>(null);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
-  const myAvatar = user?.avatar
-    ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:8000/storage/${user.avatar}`)
-    : null;
+  // Dynamic Avatar URLs
+  const [myAvatar, setMyAvatar] = useState<string | null>(null);
+  const [resolvedFriendAvatar, setResolvedFriendAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (user?.avatar) {
+        if (user.avatar.startsWith('http')) {
+          setMyAvatar(user.avatar);
+        } else {
+          try {
+            const baseUrl = await getApiBaseUrl();
+            const baseWithoutApi = baseUrl.replace(/\/api$/, '');
+            setMyAvatar(`${baseWithoutApi}/storage/${user.avatar}`);
+          } catch {
+            setMyAvatar(null);
+          }
+        }
+      } else {
+        setMyAvatar(null);
+      }
+    })();
+  }, [user?.avatar]);
+
+  useEffect(() => {
+    (async () => {
+      const raw = route.params?.friendAvatar;
+      if (raw && raw !== 'https://via.placeholder.com/150') {
+        if (raw.startsWith('http')) {
+          setResolvedFriendAvatar(raw);
+        } else {
+          try {
+            const baseUrl = await getApiBaseUrl();
+            const baseWithoutApi = baseUrl.replace(/\/api$/, '');
+            setResolvedFriendAvatar(`${baseWithoutApi}/storage/${raw}`);
+          } catch {
+            setResolvedFriendAvatar(null);
+          }
+        }
+      } else {
+        setResolvedFriendAvatar(null);
+      }
+    })();
+  }, [route.params?.friendAvatar]);
 
   // ─── Load messages (deduplication to avoid flicker) ───
   const loadMessages = useCallback(async (silent = false) => {
@@ -279,13 +318,13 @@ export default function CommunityMessagesScreen() {
       msg={item}
       isMe={item.isMe}
       myAvatar={myAvatar}
-      friendAvatar={friendAvatar}
+      friendAvatar={resolvedFriendAvatar}
       friendName={friendName}
       userName={user?.name || 'Me'}
       onLongPress={handleLongPress}
       onReact={handleReact}
     />
-  ), [myAvatar, friendAvatar, friendName, user?.name]);
+  ), [myAvatar, resolvedFriendAvatar, friendName, user?.name]);
 
   const keyExtractor = useCallback((item: any) => item.id?.toString() || Math.random().toString(), []);
 
@@ -302,8 +341,8 @@ export default function CommunityMessagesScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={COLORS.text} />
         </TouchableOpacity>
-        {friendAvatar
-          ? <Image source={{ uri: friendAvatar }} style={styles.headerAvatar} />
+        {resolvedFriendAvatar
+          ? <Image source={{ uri: resolvedFriendAvatar }} style={styles.headerAvatar} />
           : (
             <View style={[styles.headerAvatar, styles.initAvatar]}>
               <Text style={styles.initText}>{friendName[0]?.toUpperCase()}</Text>
