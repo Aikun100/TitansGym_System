@@ -44,6 +44,18 @@ function getExpoHostIp(): string | null {
  * network changed (e.g., switched WiFi/hotspot) — auto-update!
  */
 export async function getApiBaseUrl(): Promise<string> {
+  // If we have a cached URL and it's production (starts with https://), return it
+  if (_cachedBaseUrl && _cachedBaseUrl.startsWith('https://')) {
+    return _cachedBaseUrl;
+  }
+
+  // Check saved value first for production mode
+  const saved = await AsyncStorage.getItem(SERVER_URL_KEY);
+  if (saved && saved.startsWith('https://')) {
+    _cachedBaseUrl = saved;
+    return saved;
+  }
+
   // Always check Expo IP to detect network changes
   const expoIp = getExpoHostIp();
 
@@ -66,7 +78,6 @@ export async function getApiBaseUrl(): Promise<string> {
     }
 
     // No cache yet — check saved value
-    const saved = await AsyncStorage.getItem(SERVER_URL_KEY);
     if (saved) {
       const savedIpMatch = saved.match(/\/\/([^:\/]+)/);
       const savedIp = savedIpMatch ? savedIpMatch[1] : null;
@@ -91,14 +102,13 @@ export async function getApiBaseUrl(): Promise<string> {
   // Expo IP not available (e.g., production build) — use saved/cached
   if (_cachedBaseUrl) return _cachedBaseUrl;
 
-  const saved = await AsyncStorage.getItem(SERVER_URL_KEY);
   if (saved) {
     _cachedBaseUrl = saved;
     return saved;
   }
 
   // Last resort fallback
-  return `http://192.168.1.1:${DEFAULT_PORT}/api`;
+  return 'https://titansgymapp.onrender.com/api';
 }
 
 /**
@@ -106,6 +116,10 @@ export async function getApiBaseUrl(): Promise<string> {
  * Clears the cached URL and re-detects from Expo's connection.
  */
 export async function autoDetectServerIp(): Promise<string | null> {
+  const saved = await AsyncStorage.getItem(SERVER_URL_KEY);
+  if (saved && saved.startsWith('https://')) {
+    return null; // Don't auto-detect if already using a production HTTPS URL
+  }
   const expoIp = getExpoHostIp();
   if (expoIp) {
     const url = `http://${expoIp}:${DEFAULT_PORT}/api`;
@@ -122,12 +136,21 @@ export async function autoDetectServerIp(): Promise<string | null> {
  */
 export async function setApiBaseUrl(ip: string): Promise<void> {
   let url: string;
-  if (ip.startsWith('http')) {
-    url = ip.replace(/\/+$/, '');
+  const cleanIp = ip.trim().replace(/\/+$/, '');
+  
+  if (cleanIp.startsWith('http://') || cleanIp.startsWith('https://')) {
+    url = cleanIp;
     if (!url.endsWith('/api')) url += '/api';
   } else {
-    const hasPort = ip.includes(':');
-    url = `http://${ip}${hasPort ? '' : ':' + DEFAULT_PORT}/api`;
+    // If it is a domain name (contains a dot and does not match IPv4 format)
+    const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/;
+    if (cleanIp.includes('.') && !ipv4Regex.test(cleanIp)) {
+      url = `https://${cleanIp}`;
+      if (!url.endsWith('/api')) url += '/api';
+    } else {
+      const hasPort = cleanIp.includes(':');
+      url = `http://${cleanIp}${hasPort ? '' : ':' + DEFAULT_PORT}/api`;
+    }
   }
 
   _cachedBaseUrl = url;
@@ -139,6 +162,9 @@ export async function setApiBaseUrl(ip: string): Promise<void> {
  */
 export async function getSavedServerIp(): Promise<string> {
   const url = await getApiBaseUrl();
+  if (url.startsWith('https://')) {
+    return url.replace(/\/api$/, '');
+  }
   const match = url.match(/\/\/([^/]+)/);
   return match ? match[1] : '';
 }
@@ -148,11 +174,27 @@ export async function getSavedServerIp(): Promise<string> {
  * Returns true if the server responds within the timeout.
  */
 export async function testServerConnection(ip: string): Promise<boolean> {
-  const hasPort = ip.includes(':');
-  const testUrl = `http://${ip}${hasPort ? '' : ':' + DEFAULT_PORT}/api/ping`;
+  const cleanIp = ip.trim().replace(/\/+$/, '');
+  let testUrl: string;
+  let fallbackUrl: string;
+
+  if (cleanIp.startsWith('http://') || cleanIp.startsWith('https://')) {
+    testUrl = cleanIp.endsWith('/api') ? `${cleanIp}/ping` : `${cleanIp}/api/ping`;
+    fallbackUrl = cleanIp.endsWith('/api') ? `${cleanIp}/user` : `${cleanIp}/api/user`;
+  } else {
+    const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/;
+    if (cleanIp.includes('.') && !ipv4Regex.test(cleanIp)) {
+      testUrl = `https://${cleanIp}/api/ping`;
+      fallbackUrl = `https://${cleanIp}/api/user`;
+    } else {
+      const hasPort = cleanIp.includes(':');
+      testUrl = `http://${cleanIp}${hasPort ? '' : ':' + DEFAULT_PORT}/api/ping`;
+      fallbackUrl = `http://${cleanIp}${hasPort ? '' : ':' + DEFAULT_PORT}/api/user`;
+    }
+  }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000);
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
 
   try {
     const response = await fetch(testUrl, { signal: controller.signal });
@@ -160,10 +202,10 @@ export async function testServerConnection(ip: string): Promise<boolean> {
     return response.ok || response.status === 200 || response.status === 404 || response.status === 401;
   } catch {
     clearTimeout(timeoutId);
-    // Fallback: try /api/user — any response (even 401) means server is alive
-    const fallbackUrl = `http://${ip}${hasPort ? '' : ':' + DEFAULT_PORT}/api/user`;
+    
+    // Fallback: try user endpoint — any response (even 401) means server is alive
     const controller2 = new AbortController();
-    const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+    const timeoutId2 = setTimeout(() => controller2.abort(), 4000);
     try {
       const response = await fetch(fallbackUrl, {
         signal: controller2.signal,

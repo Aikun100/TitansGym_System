@@ -1,0 +1,5 @@
+{
+  "name": "titans-gym-mobile",
+  "buildCommand": "npx expo export",
+  "outputDirectory": "dist"
+}

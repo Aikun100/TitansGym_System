@@ -167,7 +167,12 @@ export default function LoginScreen({ navigation }: any) {
       await setApiBaseUrl(serverIp.trim());
       setCurrentServerIp(serverIp.trim());
       setServerStatus('connected');
-      Alert.alert('✅ Server Saved', `API URL set to ${serverIp.trim()}:8000`, [
+      const cleanIp = serverIp.trim();
+      const isDomain = cleanIp.includes('.') && !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(cleanIp);
+      const displayUrl = isDomain 
+        ? (cleanIp.startsWith('http') ? cleanIp : `https://${cleanIp}`)
+        : (cleanIp.includes(':') ? cleanIp : `${cleanIp}:8000`);
+      Alert.alert('✅ Server Saved', `API URL set to ${displayUrl}`, [
         { text: 'OK', onPress: () => setShowServerModal(false) },
       ]);
     } else {
