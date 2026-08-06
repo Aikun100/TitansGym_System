@@ -18,12 +18,12 @@ class DatabaseSeeder extends Seeder
     {
         // Clear existing data
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        User::truncate();
-        Booking::truncate();
-        Payment::truncate();
-        Attendance::truncate();
-        Progress::truncate();
-        WorkoutPlan::truncate();
+        User::query()->delete();
+        Booking::query()->delete();
+        Payment::query()->delete();
+        Attendance::query()->delete();
+        Progress::query()->delete();
+        WorkoutPlan::query()->delete();
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         // Create Admin
