@@ -21,6 +21,13 @@ class Payment extends Model
         'membership_type',
         'period_start',
         'period_end',
+        // Payment provider fields
+        'provider',
+        'provider_session_id',
+        'provider_payment_intent',
+        'checkout_url',
+        'paid_at',
+        'provider_metadata',
     ];
 
     protected $casts = [
@@ -29,6 +36,8 @@ class Payment extends Model
         'period_start' => 'date',
         'period_end' => 'date',
         'amount' => 'decimal:2',
+        'paid_at' => 'datetime',
+        'provider_metadata' => 'array',
     ];
 
     // Relationships

@@ -222,6 +222,32 @@
             </div>
         </div>
         
+        <!-- Quick Actions -->
+        @include('components.quick-actions', [
+            'actions' => [
+                [
+                    'label' => 'Book Session',
+                    'url' => route('member.bookings.create'),
+                    'icon' => 'fas fa-calendar-plus'
+                ],
+                [
+                    'label' => 'View Progress',
+                    'url' => route('member.progress.index'),
+                    'icon' => 'fas fa-chart-line'
+                ],
+                [
+                    'label' => 'My Plans',
+                    'url' => route('member.workout-plans.index'),
+                    'icon' => 'fas fa-clipboard-list'
+                ],
+                [
+                    'label' => 'Workout Logs',
+                    'url' => route('member.workout-logs.index'),
+                    'icon' => 'fas fa-dumbbell'
+                ]
+            ]
+        ])
+        
         <!-- Stats Grid -->
         <div class="stats-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             <!-- Upcoming Sessions -->
@@ -389,6 +415,73 @@
                 </div>
             </div>
         </div>
+
+        <!-- Quick Payment Card -->
+        @php
+            $user = auth()->user();
+            $showPaymentCard = !$user->membership_expiry || $user->membership_expiry->isPast() || $user->membership_status === 'expiring_soon';
+        @endphp
+        @if($showPaymentCard)
+        <div class="mb-8">
+            <div class="relative bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-2xl p-6 shadow-xl overflow-hidden">
+                <!-- Background decoration -->
+                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white bg-opacity-10 rounded-full"></div>
+                <div class="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white bg-opacity-10 rounded-full"></div>
+                
+                <div class="relative flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-crown text-3xl text-white"></i>
+                        </div>
+                        <div class="text-white">
+                            @if(!$user->membership_expiry || $user->membership_expiry->isPast())
+                                <h3 class="text-xl font-bold">Activate Your Membership</h3>
+                                <p class="text-white text-opacity-90 text-sm">Start your fitness journey today with online payment!</p>
+                            @else
+                                <h3 class="text-xl font-bold">Renew Your Membership</h3>
+                                <p class="text-white text-opacity-90 text-sm">Your membership expires in {{ $user->membership_days_remaining }} days. Renew now!</p>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                        <div class="flex items-center gap-2 text-white text-sm">
+                            <i class="fab fa-cc-visa text-xl"></i>
+                            <i class="fab fa-cc-mastercard text-xl"></i>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded text-xs font-medium">GCash</span>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded text-xs font-medium">Maya</span>
+                        </div>
+                        <a href="{{ route('member.payments.checkout') }}" 
+                           class="inline-flex items-center px-8 py-3 bg-white text-green-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-0.5">
+                            <i class="fas fa-credit-card mr-2"></i>
+                            Pay Now
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Features -->
+                <div class="relative mt-6 pt-4 border-t border-white border-opacity-20">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-white text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-shield-alt text-white text-opacity-80"></i>
+                            <span>Secure Payment</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-bolt text-white text-opacity-80"></i>
+                            <span>Instant Activation</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-wallet text-white text-opacity-80"></i>
+                            <span>Multiple Options</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-receipt text-white text-opacity-80"></i>
+                            <span>Digital Receipt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Today's Session & Recent Progress -->
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

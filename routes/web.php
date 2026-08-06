@@ -27,11 +27,6 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Design Showcase (for development/reference)
-Route::get('/design-showcase', function () {
-    return view('design-showcase');
-})->name('design.showcase');
-
 // Static Pages
 Route::get('/about', [App\Http\Controllers\PageController::class, 'about'])->name('about');
 Route::get('/contact', [App\Http\Controllers\PageController::class, 'contact'])->name('contact');
@@ -164,6 +159,7 @@ Route::middleware('auth')->group(function () {
         
         // Attendance
         Route::get('/attendance', [TrainerAttendanceController::class, 'index'])->name('trainer.attendance.index');
+        Route::get('/attendance/by-date', [TrainerAttendanceController::class, 'getAttendanceByDate'])->name('trainer.attendance.by-date');
         Route::get('/attendance/create', [TrainerAttendanceController::class, 'create'])->name('trainer.attendance.create');
         Route::post('/attendance', [TrainerAttendanceController::class, 'store'])->name('trainer.attendance.store');
         
@@ -241,6 +237,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/payments', [MemberPaymentController::class, 'index'])->name('member.payments.index');
         Route::get('/payments/history', [MemberPaymentController::class, 'paymentHistory'])->name('member.payments.history');
         
+        // Payment Checkout (Stripe & PayMongo)
+        Route::get('/payments/checkout', [App\Http\Controllers\Member\PaymentCheckoutController::class, 'checkout'])->name('member.payments.checkout');
+        Route::post('/payments/create-session', [App\Http\Controllers\Member\PaymentCheckoutController::class, 'createSession'])->name('member.payments.create-session');
+        Route::get('/payments/success', [App\Http\Controllers\Member\PaymentCheckoutController::class, 'success'])->name('member.payments.success');
+        Route::get('/payments/cancel', [App\Http\Controllers\Member\PaymentCheckoutController::class, 'cancel'])->name('member.payments.cancel');
+        
+        // Demo Payment Routes (for testing without real API keys)
+        Route::get('/payments/demo-checkout', [App\Http\Controllers\Member\PaymentCheckoutController::class, 'demoCheckout'])->name('member.payments.demo-checkout');
+        Route::post('/payments/demo-process', [App\Http\Controllers\Member\PaymentCheckoutController::class, 'demoProcess'])->name('member.payments.demo-process');
+        
         // Exercise Library
         Route::get('/exercises', [MemberExerciseController::class, 'index'])->name('member.exercises.index');
         Route::get('/exercises/{slug}', [MemberExerciseController::class, 'show'])->name('member.exercises.show');
@@ -275,4 +281,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/members/{member}', [MemberDashboardController::class, 'viewMember'])->name('member.members.show');
         Route::get('/trainers/{trainer}', [MemberDashboardController::class, 'viewTrainer'])->name('member.trainers.show');
     });
+});
+
+// Payment Webhooks (no auth, no CSRF - verified by signature)
+Route::prefix('webhooks')->group(function () {
+    Route::post('/stripe', [App\Http\Controllers\Webhook\StripeWebhookController::class, 'handle'])->name('webhooks.stripe');
+    Route::post('/paymongo', [App\Http\Controllers\Webhook\PayMongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
 });

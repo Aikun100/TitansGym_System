@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'phone' => '+1234567890',
             'is_active' => true,
+            'approval_status' => 'approved',
         ]);
 
         // Create Trainers
@@ -49,6 +50,7 @@ class DatabaseSeeder extends Seeder
             'experience_years' => 5,
             'hourly_rate' => 60.00,
             'is_active' => true,
+            'approval_status' => 'approved',
         ]);
 
         $trainers[] = User::create([
@@ -62,6 +64,7 @@ class DatabaseSeeder extends Seeder
             'experience_years' => 3,
             'hourly_rate' => 50.00,
             'is_active' => true,
+            'approval_status' => 'approved',
         ]);
 
         $trainers[] = User::create([
@@ -75,6 +78,7 @@ class DatabaseSeeder extends Seeder
             'experience_years' => 7,
             'hourly_rate' => 75.00,
             'is_active' => true,
+            'approval_status' => 'approved',
         ]);
 
         // Create Members
@@ -94,6 +98,7 @@ class DatabaseSeeder extends Seeder
             'emergency_contact' => '+1234567899',
             'health_notes' => 'No known health issues',
             'is_active' => true,
+            'approval_status' => 'approved',
         ]);
 
         $members[] = User::create([
@@ -111,6 +116,7 @@ class DatabaseSeeder extends Seeder
             'emergency_contact' => '+1234567888',
             'health_notes' => 'Allergic to nuts',
             'is_active' => true,
+            'approval_status' => 'approved',
         ]);
 
         // Create additional members with more realistic data
@@ -135,6 +141,7 @@ class DatabaseSeeder extends Seeder
                 'emergency_contact' => '+1234567' . (200 + $i),
                 'health_notes' => rand(0, 1) ? 'No health issues' : 'Consult doctor before intense exercise',
                 'is_active' => rand(0, 10) > 1, // 90% active
+                'approval_status' => 'approved',
             ]);
         }
 
@@ -215,7 +222,7 @@ class DatabaseSeeder extends Seeder
                     'amount' => $amount,
                     'payment_date' => $paymentDate,
                     'due_date' => $paymentDate->copy()->addMonth(),
-                    'payment_method' => ['cash', 'card', 'bank_transfer', 'online'][rand(0, 3)],
+                    'payment_method' => ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'online', 'e_wallet'][rand(0, 5)],
                     'transaction_id' => 'TXN' . time() . $member->id . $index . $transactionCounter++ . rand(1000, 9999),
                     'status' => 'paid',
                     'description' => ucfirst($member->membership_type) . ' membership fee',
@@ -239,7 +246,7 @@ class DatabaseSeeder extends Seeder
                     'amount' => $amount,
                     'payment_date' => $dueDate,
                     'due_date' => $dueDate,
-                    'payment_method' => ['cash', 'card', 'bank_transfer', 'online'][rand(0, 3)],
+                    'payment_method' => ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'online', 'e_wallet'][rand(0, 5)],
                     'transaction_id' => 'TXN' . time() . $member->id . 'P' . $transactionCounter++ . rand(10000, 99999),
                     'status' => 'pending',
                     'description' => ucfirst($member->membership_type) . ' membership renewal',
@@ -263,7 +270,7 @@ class DatabaseSeeder extends Seeder
                     'amount' => $amount,
                     'payment_date' => $dueDate,
                     'due_date' => $dueDate,
-                    'payment_method' => ['cash', 'card', 'bank_transfer', 'online'][rand(0, 3)],
+                    'payment_method' => ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'online', 'e_wallet'][rand(0, 5)],
                     'transaction_id' => 'TXN' . time() . $member->id . 'O' . $transactionCounter++ . rand(10000, 99999),
                     'status' => 'pending',
                     'description' => 'Overdue ' . $member->membership_type . ' membership fee',

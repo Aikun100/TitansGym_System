@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Check if user is trainer
         if (!Auth::user()->isTrainer()) {
@@ -19,13 +19,74 @@ class AttendanceController extends Controller
 
         $trainer = Auth::user();
         
-        // Get attendance records for members (you might need to adjust this based on your relationships)
+        // Get current month/year or from request
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+        
+        // Create date for the selected month
+        $currentDate = \Carbon\Carbon::create($year, $month, 1);
+        
+        // Get attendance records for the selected month
         $attendance = Attendance::with('member')
-            ->latest()
-            ->paginate(15);
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->orderBy('date', 'desc')
+            ->orderBy('check_in', 'desc')
+            ->get();
+        
+        // Group attendance by date for calendar view
+        $attendanceByDate = $attendance->groupBy(function($record) {
+            return \Carbon\Carbon::parse($record->date)->format('Y-m-d');
+        });
+        
+        // Calculate stats for the month
+        $stats = [
+            'total_sessions' => $attendance->count(),
+            'unique_members' => $attendance->pluck('member_id')->unique()->count(),
+            'total_duration' => $attendance->sum('workout_duration'),
+            'total_calories' => $attendance->sum('calories_burned'),
+        ];
 
-        // Return VIEW instead of JSON
-        return view('trainer.attendance.index', compact('attendance'));
+        // Return VIEW with calendar data
+        return view('trainer.attendance.index', compact(
+            'attendance', 
+            'attendanceByDate', 
+            'currentDate', 
+            'month', 
+            'year',
+            'stats'
+        ));
+    }
+    
+    public function getAttendanceByDate(Request $request)
+    {
+        if (!Auth::user()->isTrainer()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $date = $request->get('date');
+        
+        $attendance = Attendance::with('member')
+            ->whereDate('date', $date)
+            ->orderBy('check_in', 'desc')
+            ->get();
+        
+        return response()->json([
+            'date' => $date,
+            'formatted_date' => \Carbon\Carbon::parse($date)->format('F d, Y'),
+            'records' => $attendance->map(function($record) {
+                return [
+                    'id' => $record->id,
+                    'member_name' => $record->member->name,
+                    'member_email' => $record->member->email,
+                    'check_in' => \Carbon\Carbon::parse($record->check_in)->format('h:i A'),
+                    'check_out' => \Carbon\Carbon::parse($record->check_out)->format('h:i A'),
+                    'duration' => abs($record->workout_duration),
+                    'calories' => $record->calories_burned,
+                    'notes' => $record->notes,
+                ];
+            })
+        ]);
     }
 
     public function create()
