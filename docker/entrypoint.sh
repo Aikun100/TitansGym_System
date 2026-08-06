@@ -26,12 +26,12 @@ php -r "
 \$dbReady = false;
 for (\$i = 1; \$i <= 10; \$i++) {
     try {
-        \$host = env('DB_HOST');
-        \$port = env('DB_PORT', '3306');
-        \$db   = env('DB_DATABASE');
-        \$user = env('DB_USERNAME');
-        \$pass = env('DB_PASSWORD');
-        \$conn = env('DB_CONNECTION', 'mysql');
+        \$host = getenv('DB_HOST');
+        \$port = getenv('DB_PORT') ?: '3306';
+        \$db   = getenv('DB_DATABASE');
+        \$user = getenv('DB_USERNAME');
+        \$pass = getenv('DB_PASSWORD');
+        \$conn = getenv('DB_CONNECTION') ?: 'mysql';
         
         if (\$conn === 'sqlite') {
             \$dbReady = true;
