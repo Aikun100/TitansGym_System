@@ -24,7 +24,7 @@ Route::get('/ping', function () {
 // ─── Temporary Secure Seeding Route ───
 Route::get('/secure-seed-db-82910398', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed');
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
         return response()->json([
             'status' => 'success',
             'message' => 'Live Clever Cloud Database Seeded Successfully!',
