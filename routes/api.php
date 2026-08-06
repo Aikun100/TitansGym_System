@@ -21,6 +21,23 @@ Route::get('/ping', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
 });
 
+// ─── Temporary Secure Seeding Route ───
+Route::get('/secure-seed-db-82910398', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Live Clever Cloud Database Seeded Successfully!',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to seed database: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 // ─── Public Auth Routes ───
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
