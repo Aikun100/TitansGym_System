@@ -80,7 +80,7 @@ export default function PaymentHistory({ navigation }: any) {
         {payments.length === 0 && (
           <View style={styles.emptyState}><Ionicons name="receipt-outline" size={48} color={COLORS.textTertiary} /><Text style={styles.emptyText}>No payment records yet</Text></View>
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );

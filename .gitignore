@@ -54,3 +54,11 @@ coverage/
 # Deployment
 deploy.php
 .deployer/
+
+# Agent & Tooling configs
+/.agents
+/.cursor
+/free-claude-code
+/boost.json
+/skills-lock.json
+

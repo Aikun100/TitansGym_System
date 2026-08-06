@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authApi, memberApi, trainerApi, getToken, removeToken } from '../services/api';
+import { authApi, memberApi, trainerApi, socialApi, getToken, removeToken } from '../services/api';
 
 // ─── Types ───
 export interface User {
@@ -8,7 +8,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'member' | 'trainer';
+  role: 'member' | 'trainer' | 'cashier';
   sex?: string;
   address?: string;
   date_of_birth?: string;
@@ -86,6 +86,16 @@ export interface AttendanceEntry {
   duration: string;
 }
 
+export interface Activity {
+  id: number;
+  type: string;
+  duration: number; // minutes
+  date: string;
+  photoUri?: string | null;
+  notes?: string;
+  workoutPlanId?: number;
+}
+
 export interface Payment {
   id: number;
   date: string;
@@ -124,6 +134,7 @@ interface AppContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<string>;
   logout: () => Promise<void>;
+  updateProfile: (data: any) => Promise<void>;
   bookings: Booking[];
   addBooking: (b: any) => Promise<void>;
   cancelBooking: (id: number) => Promise<void>;
@@ -146,9 +157,16 @@ interface AppContextType {
   markAllNotificationsRead: () => void;
   deleteNotification: (id: number) => void;
   unreadCount: number;
+  activities: Activity[];
+  addActivity: (act: Omit<Activity, 'id'>) => Promise<void>;
+  updateActivityPhoto: (id: number, photoUri: string) => Promise<void>;
+  refreshActivities: () => Promise<void>;
+
   refreshDashboard: () => Promise<void>;
   refreshBookings: () => Promise<void>;
   refreshProgress: () => Promise<void>;
+  refreshClients: () => Promise<void>;
+  refreshWorkoutPlans: () => Promise<void>;
   dashboardStats: any;
 }
 
@@ -259,6 +277,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dashboardStats, setDashboardStats] = useState<any>({});
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   // ─── Auto-restore session ───
   useEffect(() => {
@@ -275,7 +294,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     };
-    restoreSession();
+
+    // Safety timeout: if session restore takes too long, show login anyway
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 10000); // 10 seconds max
+
+    restoreSession().finally(() => clearTimeout(safetyTimeout));
   }, []);
 
   // ─── Auth ───
@@ -304,7 +329,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setClients([]);
     setNotifications([]);
     setDashboardStats({});
+    setActivities([]);
   }, []);
+
+  // ─── Activities ───
+  const refreshActivities = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await socialApi.getActivities();
+      setActivities(data);
+    } catch (e) {
+      console.error('Failed to load activities', e);
+    }
+  }, [user]);
+
+  const addActivity = useCallback(async (act: Omit<Activity, 'id'>) => {
+    try {
+      await socialApi.storeActivity({
+        type: act.type,
+        duration_minutes: act.duration,
+        notes: act.notes,
+        photo_uri: act.photoUri
+      });
+      await refreshActivities();
+    } catch (e) {
+      console.error('Failed to save activity', e);
+    }
+  }, [refreshActivities]);
+
+  const updateActivityPhoto = useCallback(async (id: number, photoUri: string) => {
+    const newActs = activities.map(a => a.id === id ? { ...a, photoUri } : a);
+    setActivities(newActs);
+  }, [activities]);
+
+  // ─── Profile Update ───
+  const updateProfile = useCallback(async (data: any) => {
+    if (!user) return;
+    const api = user.role === 'member' ? memberApi : trainerApi;
+    const result = await api.updateProfile(data);
+    if (result.user) {
+      setUser(formatUserFromApi(result.user));
+    } else {
+      // Update locally if API doesn't return the updated user
+      setUser(prev => prev ? { ...prev, ...data } : prev);
+    }
+  }, [user]);
 
   // ─── Dashboard Refresh ───
   const refreshDashboard = useCallback(async () => {
@@ -390,6 +459,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setWorkoutPlans(prev => prev.filter(w => w.id !== id));
   }, []);
 
+  // ─── Workout Plans ───
+  const refreshWorkoutPlans = useCallback(async () => {
+    if (!user) return;
+    try {
+      const api = user.role === 'member' ? memberApi : trainerApi;
+      const data = await api.getWorkoutPlans();
+      const items = Array.isArray(data) ? data : (data as any).data || [];
+      setWorkoutPlans(items.map((p: any) => ({
+        id: p.id,
+        name: p.title || p.name || 'Workout Plan',
+        trainer: p.trainer_name || user.name || 'Trainer',
+        memberId: p.member_id,
+        exercises: p.exercises ? (typeof p.exercises === 'string' ? JSON.parse(p.exercises) : p.exercises) : [],
+        status: p.status || 'active',
+        isExecuted: !!p.is_executed,
+        date: p.start_date || p.created_at?.split('T')[0] || '',
+        notes: p.exercise_recommendations || p.notes,
+        description: p.description,
+      })));
+    } catch (e) {
+      console.error('Workout plans load error:', e);
+    }
+  }, [user]);
+
   // ─── Progress ───
   const refreshProgress = useCallback(async () => {
     if (!user) return;
@@ -417,6 +510,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteProgressEntry = useCallback((id: number) => {
     setProgressEntries(prev => prev.filter(e => e.id !== id));
   }, []);
+
+  // ─── Clients Refresh ───
+  const refreshClients = useCallback(async () => {
+    if (!user || user.role !== 'trainer') return;
+    try {
+      const clientsData = await trainerApi.getClients();
+      setClients(Array.isArray(clientsData) ? clientsData.map(formatClientFromApi) : []);
+    } catch (e) {
+      console.error('Clients refresh error:', e);
+    }
+  }, [user]);
 
   // ─── Attendance (local actions for now) ───
   const checkIn = useCallback(() => {
@@ -466,48 +570,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const loadData = async () => {
-      try {
-        await refreshDashboard();
-        await refreshBookings();
+      const promises: Promise<void>[] = [
+        refreshDashboard().catch(e => console.error('Dashboard:', e)),
+        refreshBookings().catch(e => console.error('Bookings:', e)),
+        refreshWorkoutPlans().catch(e => console.error('Plans:', e)),
+        refreshActivities().catch(e => console.error('Activities:', e)),
+      ];
 
-        if (user.role === 'member') {
-          try {
-            const paymentsData = await memberApi.getPayments();
-            const payItems = paymentsData.data || paymentsData;
-            setPayments(Array.isArray(payItems) ? payItems.map(formatPaymentFromApi) : []);
-          } catch (e) { console.error('Payments load error:', e); }
-
-          try {
-            const attData = await memberApi.getAttendance();
-            const attItems = attData.data || attData;
-            setAttendance(Array.isArray(attItems) ? attItems.map(formatAttendanceFromApi) : []);
-          } catch (e) { console.error('Attendance load error:', e); }
-        }
-
-        if (user.role === 'trainer') {
-          try {
-            const clientsData = await trainerApi.getClients();
-            setClients(Array.isArray(clientsData) ? clientsData.map(formatClientFromApi) : []);
-          } catch (e) { console.error('Clients load error:', e); }
-        }
-
-        // Notifications
-        try {
-          const api = user.role === 'member' ? memberApi : trainerApi;
-          const notifData = await api.getNotifications();
-          setNotifications((notifData.notifications || []).map((n: any) => ({
-            id: n.id,
-            title: n.title,
-            message: n.message || n.body || '',
-            time: n.created_at || '',
-            read: n.is_read || false,
-            type: n.type || 'general',
-          })));
-        } catch (e) { console.error('Notifications load error:', e); }
-
-      } catch (e) {
-        console.error('Data load error:', e);
+      if (user.role === 'member') {
+        promises.push(
+          memberApi.getPayments()
+            .then(data => { const items = data.data || data; setPayments(Array.isArray(items) ? items.map(formatPaymentFromApi) : []); })
+            .catch(e => console.error('Payments:', e)),
+          memberApi.getAttendance()
+            .then(data => { const items = data.data || data; setAttendance(Array.isArray(items) ? items.map(formatAttendanceFromApi) : []); })
+            .catch(e => console.error('Attendance:', e)),
+        );
       }
+
+      if (user.role === 'trainer') {
+        promises.push(
+          trainerApi.getClients()
+            .then(data => setClients(Array.isArray(data) ? data.map(formatClientFromApi) : []))
+            .catch(e => console.error('Clients:', e)),
+        );
+      }
+
+      // Notifications
+      promises.push(
+        (user.role === 'member' ? memberApi : trainerApi).getNotifications()
+          .then(data => {
+            setNotifications((data.notifications || []).map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              message: n.message || n.body || '',
+              time: n.created_at || '',
+              read: n.is_read || false,
+              type: n.type || 'general',
+            })));
+          })
+          .catch(e => console.error('Notifications:', e)),
+      );
+
+      await Promise.allSettled(promises);
     };
 
     loadData();
@@ -516,15 +621,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       user, setUser, loading,
-      login, register, logout,
+      login, register, logout, updateProfile,
       bookings, addBooking, cancelBooking, updateBookingStatus,
       workoutPlans, addWorkoutPlan, toggleWorkoutExecuted, deleteWorkoutPlan,
+      activities, addActivity, updateActivityPhoto, refreshActivities,
       progressEntries, addProgressEntry, deleteProgressEntry,
       attendance, checkIn, checkOut,
       payments,
       clients, updateClientProgress,
       notifications, markNotificationRead, markAllNotificationsRead, deleteNotification, unreadCount,
-      refreshDashboard, refreshBookings, refreshProgress,
+      refreshDashboard, refreshBookings, refreshProgress, refreshClients, refreshWorkoutPlans,
       dashboardStats,
     }}>
       {children}

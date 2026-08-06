@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, SIZES } from '../constants/theme';
 
 import TrainerDashboard from '../screens/trainer/TrainerDashboard';
@@ -12,6 +13,7 @@ import TrainerProfile from '../screens/trainer/TrainerProfile';
 import WorkoutPlans from '../screens/trainer/WorkoutPlans';
 import TakeAttendance from '../screens/trainer/TakeAttendance';
 import TrackProgress from '../screens/trainer/TrackProgress';
+import ClientProfileScreen from '../screens/trainer/ClientProfileScreen';
 import ExerciseLibrary from '../screens/shared/ExerciseLibrary';
 import SettingsScreen from '../screens/shared/SettingsScreen';
 import NotificationsScreen from '../screens/shared/NotificationsScreen';
@@ -39,6 +41,7 @@ function ClientsStackNav() {
   return (
     <ClientsStack.Navigator screenOptions={{ headerShown: false }}>
       <ClientsStack.Screen name="ClientsHome" component={TrainerClients} />
+      <ClientsStack.Screen name="ClientProfile" component={ClientProfileScreen} />
     </ClientsStack.Navigator>
   );
 }
@@ -62,6 +65,11 @@ function ProfileStackNav() {
 }
 
 export default function TrainerTabs() {
+  const insets = useSafeAreaInsets();
+  const basePadding = Platform.OS === 'ios' ? 20 : 8;
+  const paddingBottom = Math.max(insets.bottom, basePadding);
+  const tabBarHeight = 62 + paddingBottom;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -72,15 +80,15 @@ export default function TrainerTabs() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginBottom: Platform.OS === 'ios' ? 0 : 8,
+          marginBottom: Platform.OS === 'ios' ? 0 : 4,
         },
         tabBarStyle: {
           backgroundColor: COLORS.backgroundSecondary,
           borderTopWidth: 1,
           borderTopColor: COLORS.border,
-          height: SIZES.tabBarHeight,
+          height: tabBarHeight,
           paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          paddingBottom: paddingBottom,
           position: 'absolute',
           bottom: 0,
           left: 0,

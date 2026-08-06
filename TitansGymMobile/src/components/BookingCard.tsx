@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
@@ -11,8 +11,11 @@ interface BookingCardProps {
   duration: number;
   type: string;
   status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
+  trainerAvatar?: string;
   showMember?: boolean;
   onPress?: () => void;
+  onAddCalendar?: () => void;
+  onReschedule?: () => void;
   style?: ViewStyle;
 }
 
@@ -24,8 +27,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   duration,
   type,
   status,
+  trainerAvatar,
   showMember = false,
   onPress,
+  onAddCalendar,
+  onReschedule,
   style,
 }) => {
   const statusConfig = {
@@ -41,6 +47,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const dateObj = new Date(date);
   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
   const monthDay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  // Placeholder avatar if none provided (using a generic fitness image)
+  const avatarUrl = trainerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(showMember ? (memberName || 'M') : trainerName)}&background=2C3E50&color=fff`;
 
   return (
     <TouchableOpacity
@@ -63,10 +72,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <Text style={[styles.statusText, { color: config.color }]}>{config.label}</Text>
           </View>
         </View>
-        
-        <Text style={styles.personName}>
-          {showMember ? memberName : trainerName}
-        </Text>
+
+        <View style={styles.personRow}>
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          <Text style={styles.personName}>
+            {showMember ? memberName : trainerName}
+          </Text>
+        </View>
 
         <View style={styles.details}>
           <View style={styles.detailItem}>
@@ -82,6 +94,23 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <Text style={styles.detailText}>{monthDay}</Text>
           </View>
         </View>
+
+        {status === 'confirmed' && (
+          <View style={styles.actionRow}>
+            {onAddCalendar && (
+              <TouchableOpacity style={styles.actionBtn} onPress={onAddCalendar}>
+                <Ionicons name="calendar-outline" size={16} color={COLORS.primary} />
+                <Text style={styles.actionBtnText}>Add to Calendar</Text>
+              </TouchableOpacity>
+            )}
+            {onReschedule && (
+              <TouchableOpacity style={[styles.actionBtn, styles.actionBtnOutline]} onPress={onReschedule}>
+                <Ionicons name="refresh-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.actionBtnTextOutline}>Reschedule</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -95,6 +124,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.cardBorder,
     flexDirection: 'row',
     overflow: 'hidden',
+    marginBottom: 16,
     ...SHADOWS.small,
   },
   dateBadge: {
@@ -159,6 +189,52 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: SIZES.xs,
     color: COLORS.textTertiary,
+  },
+  personRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    backgroundColor: COLORS.primary + '15',
+    borderRadius: SIZES.radiusSm,
+  },
+  actionBtnOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  actionBtnText: {
+    fontSize: SIZES.xs,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  actionBtnTextOutline: {
+    fontSize: SIZES.xs,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
   },
 });
 

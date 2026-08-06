@@ -142,6 +142,14 @@
                                 <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
                             @endif
                         </a>
+                    @elseif(auth()->user()->isCashier())
+                        <a href="{{ route('cashier.dashboard') }}" 
+                           class="group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('cashier.dashboard') ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/50' : 'text-gray-300 hover:text-white hover:bg-gray-800' }}">
+                            <i class="fas fa-cash-register mr-2"></i>POS Dashboard
+                            @if(request()->routeIs('cashier.dashboard'))
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
+                            @endif
+                        </a>
                     @endif
                 </div>
                 @endauth
@@ -228,6 +236,8 @@
                     <a href="{{ route('member.progress.index') }}" class="block text-white px-3 py-2 rounded-md text-base font-medium">Progress</a>
                     <a href="{{ route('member.payments.index') }}" class="block text-white px-3 py-2 rounded-md text-base font-medium">Payments</a>
                     <a href="{{ route('member.membership') }}" class="block text-white px-3 py-2 rounded-md text-base font-medium">Membership</a>
+                @elseif(auth()->user()->isCashier())
+                    <a href="{{ route('cashier.dashboard') }}" class="block text-white px-3 py-2 rounded-md text-base font-medium">POS Dashboard</a>
                 @endif
 
                 <div class="border-t border-orange-500/30 mt-2 pt-2">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, StatusBar, TouchableOpacity,
-  Dimensions, Alert, RefreshControl,
+  Dimensions, Alert, RefreshControl, ImageBackground
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,44 +47,51 @@ export default function TrainerDashboard() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.trainerAccent} colors={[COLORS.trainerAccent]} />}>
         
-        {/* Header */}
-        <LinearGradient colors={[COLORS.background, COLORS.backgroundSecondary]} style={styles.header}>
+        {/* Premium Header Profile Area */}
+        <ImageBackground 
+          source={{ uri: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80' }} 
+          style={styles.heroBackground}
+        >
+          <LinearGradient colors={['rgba(9,9,11,0.4)', '#09090B']} style={StyleSheet.absoluteFillObject} />
+          
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>{greeting()}</Text>
-              <Text style={styles.userName}>{user?.name || 'Trainer'}</Text>
+              <Text style={styles.userName}>{user?.name || 'Coach'}</Text>
             </View>
             <TouchableOpacity style={styles.notifButton} onPress={() => navigation.navigate('Notifications')}>
-              <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
+              <Ionicons name="notifications-outline" size={24} color="#FFF" />
               {unreadCount > 0 && <View style={styles.notifBadge}><Text style={styles.notifBadgeText}>{unreadCount}</Text></View>}
             </TouchableOpacity>
           </View>
 
-          {/* Status Card */}
-          <LinearGradient colors={['#7C3AED', '#5B21B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.statusCard}>
+          {/* Premium Glassmorphic Status Card */}
+          <LinearGradient colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.03)']} style={styles.statusCard}>
             <View style={styles.statusTop}>
               <View style={styles.statusLeft}>
-                <View style={styles.trainerAvatar}><Text style={styles.avatarInitials}>{initials}</Text></View>
+                <View style={styles.trainerAvatar}>
+                  <ImageBackground source={{ uri: user?.avatar || 'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&q=80' }} style={{width:'100%', height:'100%'}} imageStyle={{borderRadius:28}} />
+                </View>
                 <View>
                   <Text style={styles.statusLabel}>TODAY'S SCHEDULE</Text>
                   <Text style={styles.statusValue}>{todayBookings.length} Sessions</Text>
                 </View>
               </View>
               <View style={styles.ratingBadge}>
-                <Ionicons name="star" size={16} color="#FFD740" />
+                <Ionicons name="star" size={14} color="#FFD740" />
                 <Text style={styles.ratingText}>{user?.rating || 4.8}</Text>
               </View>
             </View>
+            
             <View style={styles.statusBottom}>
               <View style={styles.statusStat}><Text style={styles.statusStatValue}>{dashboardStats?.total_clients || clients.length}</Text><Text style={styles.statusStatLabel}>Clients</Text></View>
               <View style={styles.statusDivider} />
               <View style={styles.statusStat}><Text style={styles.statusStatValue}>{dashboardStats?.completed_sessions || user?.totalSessions || 0}</Text><Text style={styles.statusStatLabel}>Sessions</Text></View>
               <View style={styles.statusDivider} />
-              <View style={styles.statusStat}><Text style={styles.statusStatValue}>{pendingCount}</Text><Text style={styles.statusStatLabel}>Pending</Text></View>
+              <View style={styles.statusStat}><Text style={[styles.statusStatValue, { color: COLORS.accent }]}>{pendingCount}</Text><Text style={styles.statusStatLabel}>Pending</Text></View>
             </View>
-            <View style={styles.decorCircle1} /><View style={styles.decorCircle2} />
           </LinearGradient>
-        </LinearGradient>
+        </ImageBackground>
 
         {/* Stats */}
         <View style={styles.section}>
@@ -145,22 +152,23 @@ export default function TrainerDashboard() {
           </ScrollView>
         </View>
 
-        {/* Quick Actions */}
+        {/* Quick Actions Premium */}
         <View style={styles.section}>
-          <SectionHeader title="Quick Actions" icon="apps" />
+          <SectionHeader title="Quick Actions" icon="flash" />
           <View style={styles.actionsGrid}>
             {[
-              { icon: 'clipboard-outline' as const, label: 'Workout\nPlans', color: COLORS.trainerAccent, action: () => navigation.navigate('WorkoutPlans') },
-              { icon: 'checkbox-outline' as const, label: 'Take\nAttendance', color: COLORS.success, action: () => navigation.navigate('TakeAttendance') },
+              { icon: 'qr-code-outline' as const, label: 'Scan\nClient', color: COLORS.trainerAccent, action: () => navigation.navigate('TakeAttendance') },
+              { icon: 'clipboard-outline' as const, label: 'Workout\nPlans', color: COLORS.primary, action: () => navigation.navigate('WorkoutPlans') },
               { icon: 'trending-up-outline' as const, label: 'Track\nProgress', color: COLORS.accent, action: () => navigation.navigate('TrackProgress') },
-              { icon: 'barbell-outline' as const, label: 'Exercise\nLibrary', color: COLORS.primary, action: () => navigation.navigate('ExerciseLibrary') },
               { icon: 'people-outline' as const, label: 'Client\nList', color: COLORS.warning, action: () => navigation.getParent()?.navigate('Clients') },
-              { icon: 'calendar-outline' as const, label: 'Schedule\nCalendar', color: COLORS.danger, action: () => navigation.getParent()?.navigate('Bookings') },
             ].map((action, idx) => (
-              <TouchableOpacity key={idx} style={styles.actionItem} activeOpacity={0.7}
-                onPress={action.action}>
-                <View style={[styles.actionIconBox, { backgroundColor: action.color + '18' }]}><Ionicons name={action.icon} size={24} color={action.color} /></View>
-                <Text style={styles.actionLabel}>{action.label}</Text>
+              <TouchableOpacity key={idx} style={styles.actionItem} activeOpacity={0.7} onPress={action.action}>
+                <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
+                  <View style={[styles.actionIconBox, { backgroundColor: action.color + '20' }]}>
+                    <Ionicons name={action.icon} size={24} color={action.color} />
+                  </View>
+                  <Text style={styles.actionLabel}>{action.label}</Text>
+                </LinearGradient>
               </TouchableOpacity>
             ))}
           </View>
@@ -175,30 +183,27 @@ export default function TrainerDashboard() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 20 },
-  header: { paddingTop: 56, paddingHorizontal: SIZES.spacingLg, paddingBottom: SIZES.spacingLg },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.spacingXl },
-  greeting: { fontSize: SIZES.md, color: COLORS.textSecondary, marginBottom: 4 },
-  userName: { fontSize: SIZES.xxl, fontWeight: '800', color: COLORS.text },
-  notifButton: { width: 44, height: 44, borderRadius: SIZES.radiusMd, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  notifBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: COLORS.danger, width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
-  notifBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFF' },
-  statusCard: { borderRadius: SIZES.radiusXl, padding: SIZES.spacingLg, overflow: 'hidden', ...SHADOWS.medium },
+  scrollContent: { paddingBottom: 120 },
+  heroBackground: { paddingTop: 60, paddingHorizontal: SIZES.spacingLg, paddingBottom: SIZES.spacingXl },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.spacingXl, zIndex: 10 },
+  greeting: { fontSize: SIZES.md, color: 'rgba(255,255,255,0.8)', marginBottom: 4 },
+  userName: { fontSize: SIZES.xxl, fontWeight: '900', color: '#FFF', letterSpacing: 0.5 },
+  notifButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+  notifBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: COLORS.danger, width: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  notifBadgeText: { fontSize: 9, fontWeight: '800', color: '#FFF' },
+  statusCard: { borderRadius: SIZES.radiusXl, padding: SIZES.spacingLg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', zIndex: 10 },
   statusTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.spacingLg },
   statusLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  trainerAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  avatarInitials: { fontSize: SIZES.lg, fontWeight: '800', color: '#FFF' },
-  statusLabel: { fontSize: SIZES.xs, color: 'rgba(255,255,255,0.7)', fontWeight: '600', letterSpacing: 1.2, marginBottom: 2 },
-  statusValue: { fontSize: SIZES.lg, fontWeight: '700', color: '#FFF' },
-  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: SIZES.radiusFull },
-  ratingText: { fontSize: SIZES.md, fontWeight: '700', color: '#FFF' },
-  statusBottom: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: SIZES.spacingBase, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)' },
-  statusStat: { alignItems: 'center' },
-  statusStatValue: { fontSize: SIZES.xl, fontWeight: '800', color: '#FFF' },
-  statusStatLabel: { fontSize: SIZES.xs, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
-  statusDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
-  decorCircle1: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.05)', top: -30, right: -30 },
-  decorCircle2: { position: 'absolute', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.03)', bottom: -20, left: 40 },
+  trainerAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.1)' },
+  statusLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 4 },
+  statusValue: { fontSize: SIZES.xl, fontWeight: '800', color: '#FFF' },
+  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,215,64,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: SIZES.radiusFull },
+  ratingText: { fontSize: SIZES.sm, fontWeight: '800', color: '#FFD740' },
+  statusBottom: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: SIZES.spacingBase, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
+  statusStat: { flex: 1, alignItems: 'center' },
+  statusStatValue: { fontSize: 22, fontWeight: '900', color: '#FFF' },
+  statusStatLabel: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  statusDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)', height: '80%', alignSelf: 'center' },
   section: { paddingHorizontal: SIZES.spacingLg, marginTop: SIZES.spacingXl },
   statsGrid: { flexDirection: 'row', gap: SIZES.spacingMd },
   emptyCard: { backgroundColor: COLORS.cardBg, borderRadius: SIZES.radiusLg, padding: 30, alignItems: 'center', borderWidth: 1, borderColor: COLORS.cardBorder },
@@ -213,7 +218,8 @@ const styles = StyleSheet.create({
   clientProgressDot: { width: 6, height: 6, borderRadius: 3 },
   clientProgressText: { fontSize: 9, fontWeight: '600' },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SIZES.spacingMd },
-  actionItem: { width: (width - SIZES.spacingLg * 2 - SIZES.spacingMd * 2) / 3, alignItems: 'center', paddingVertical: SIZES.spacingBase, backgroundColor: COLORS.cardBg, borderRadius: SIZES.radiusLg, borderWidth: 1, borderColor: COLORS.cardBorder },
-  actionIconBox: { width: 48, height: 48, borderRadius: SIZES.radiusMd, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  actionLabel: { fontSize: SIZES.xs, color: COLORS.textSecondary, fontWeight: '500', textAlign: 'center', lineHeight: 15 },
+  actionItem: { width: (width - SIZES.spacingLg * 2 - SIZES.spacingMd) / 2, borderRadius: SIZES.radiusLg, overflow: 'hidden' },
+  actionGradient: { paddingVertical: SIZES.spacingLg, paddingHorizontal: SIZES.spacingBase, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  actionIconBox: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  actionLabel: { fontSize: SIZES.sm, color: '#FFF', fontWeight: '600', textAlign: 'center', lineHeight: 18 },
 });

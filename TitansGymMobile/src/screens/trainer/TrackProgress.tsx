@@ -17,20 +17,24 @@ export default function TrackProgress({ navigation }: any) {
   const [newBodyFat, setNewBodyFat] = useState('');
   const [newNotes, setNewNotes] = useState('');
 
-  const handleLogProgress = () => {
+  const handleLogProgress = async () => {
     const w = parseFloat(newWeight);
     if (!selectedClient) { Alert.alert('Error', 'Select a client first'); return; }
     if (isNaN(w) || w <= 0) { Alert.alert('Error', 'Enter a valid weight'); return; }
     const bf = parseFloat(newBodyFat);
-    addProgressEntry({
-      date: new Date().toISOString().split('T')[0],
-      weight: w,
-      bodyFat: isNaN(bf) ? undefined : bf,
-      notes: `[${selectedClient.name}] ${newNotes}`.trim(),
-    });
-    setShowModal(false);
-    setNewWeight(''); setNewBodyFat(''); setNewNotes('');
-    Alert.alert('Logged! 📊', `Progress recorded for ${selectedClient.name}`);
+    try {
+      await addProgressEntry({
+        member_id: selectedClient.id,
+        weight: w,
+        body_fat_percentage: isNaN(bf) ? undefined : bf,
+        notes: `[${selectedClient.name}] ${newNotes}`.trim(),
+      });
+      setShowModal(false);
+      setNewWeight(''); setNewBodyFat(''); setNewNotes('');
+      Alert.alert('Logged! 📊', `Progress recorded for ${selectedClient.name}`);
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to log progress');
+    }
   };
 
   // Show progress data grouped by recent dates
@@ -93,7 +97,7 @@ export default function TrackProgress({ navigation }: any) {
         {recentEntries.length === 0 && (
           <View style={styles.emptyState}><Ionicons name="analytics-outline" size={48} color={COLORS.textTertiary} /><Text style={styles.emptyText}>No progress entries yet</Text></View>
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       {/* Log Progress Modal */}

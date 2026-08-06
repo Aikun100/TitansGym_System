@@ -385,10 +385,15 @@ class DatabaseSeeder extends Seeder
         // Create specific data for test accounts
         $this->createTestAccountData($members, $trainers);
 
+        $this->call([
+            CashierSeeder::class,
+        ]);
+
         $this->command->info('Enhanced database seeded successfully!');
         $this->command->info('Admin Login: admin@gym.com / password');
         $this->command->info('Trainer Login: trainer@gym.com / password');
         $this->command->info('Member Login: member@gym.com / password');
+        $this->command->info('Cashier Login: cashier@gym.com / password');
         $this->command->info('Sample Trainer: sarah@gym.com / password');
         $this->command->info('Sample Member: lisa@gym.com / password');
     }

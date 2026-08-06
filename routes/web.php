@@ -27,6 +27,31 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Design Showcase (for development/reference)
+Route::get('/design-showcase', function () {
+    return view('design-showcase');
+})->name('design.showcase');
+
+// Temporary route to seed cashier
+Route::get('/seed-cashier', function () {
+    \App\Models\User::firstOrCreate(
+        ['email' => 'cashier@gym.com'],
+        [
+            'name' => 'Maria Cashier',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'role' => 'cashier',
+            'phone' => '09171234567',
+            'is_active' => true,
+        ]
+    );
+    return redirect('/login')->with('success', 'Cashier account seeded successfully! You can now log in.');
+});
+
+// Quick Actions Showcase (for development/reference)
+Route::get('/quick-actions-showcase', function () {
+    return view('pages.quick-actions-showcase');
+})->name('quick-actions.showcase');
+
 // Static Pages
 Route::get('/about', [App\Http\Controllers\PageController::class, 'about'])->name('about');
 Route::get('/contact', [App\Http\Controllers\PageController::class, 'contact'])->name('contact');
@@ -59,6 +84,7 @@ Route::middleware('auth')->group(function () {
             'admin' => redirect()->route('admin.dashboard'),
             'trainer' => redirect()->route('trainer.dashboard'),
             'member' => redirect()->route('member.dashboard'),
+            'cashier' => redirect()->route('cashier.dashboard'),
             default => redirect()->route('home'),
         };
     })->name('dashboard');
@@ -280,6 +306,12 @@ Route::middleware('auth')->group(function () {
         // View Members and Trainers
         Route::get('/members/{member}', [MemberDashboardController::class, 'viewMember'])->name('member.members.show');
         Route::get('/trainers/{trainer}', [MemberDashboardController::class, 'viewTrainer'])->name('member.trainers.show');
+    });
+
+    // Cashier routes
+    Route::prefix('cashier')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\Cashier\DashboardController::class, 'index'])->name('cashier.dashboard');
+        Route::post('/transaction', [App\Http\Controllers\Cashier\DashboardController::class, 'processTransaction'])->name('cashier.transaction');
     });
 });
 

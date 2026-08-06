@@ -117,7 +117,7 @@ export default function MealPlan({ navigation }: any) {
             <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
           </TouchableOpacity>
         ))}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );

@@ -29,8 +29,8 @@ class AuthController extends Controller
             ]);
         }
 
-        // Only allow member and trainer roles on mobile
-        if (!in_array($user->role, ['member', 'trainer'])) {
+        // Only allow member, trainer, and cashier roles on mobile
+        if (!in_array($user->role, ['member', 'trainer', 'cashier'])) {
             throw ValidationException::withMessages([
                 'email' => ['Admin accounts must use the web portal.'],
             ]);
@@ -94,8 +94,8 @@ class AuthController extends Controller
             'membership_type' => $request->membership_type ?? 'basic',
             'specialization' => $request->specialization,
             'certifications' => $request->certifications,
-            'experience_years' => $request->experience_years,
-            'hourly_rate' => $request->hourly_rate,
+            'experience_years' => $request->experience_years ?? 0,
+            'hourly_rate' => $request->hourly_rate ?? 0,
             'is_active' => true,
             'approval_status' => 'pending',
         ]);

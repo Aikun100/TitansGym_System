@@ -119,7 +119,7 @@ export default function NotificationsScreen({ navigation }: any) {
           );
         })}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );

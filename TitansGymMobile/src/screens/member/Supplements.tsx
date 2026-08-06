@@ -85,7 +85,7 @@ export default function Supplements({ navigation }: any) {
             </TouchableOpacity>
           );
         })}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );

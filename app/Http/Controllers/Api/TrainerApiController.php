@@ -315,8 +315,8 @@ class TrainerApiController extends Controller
 
         $progress = Progress::create([
             'member_id' => $request->member_id,
-            'trainer_id' => Auth::id(),
             'record_date' => now(),
+            'height' => User::find($request->member_id)->height ?? 0,
             'weight' => $request->weight,
             'body_fat_percentage' => $request->body_fat_percentage,
             'muscle_mass' => $request->muscle_mass,

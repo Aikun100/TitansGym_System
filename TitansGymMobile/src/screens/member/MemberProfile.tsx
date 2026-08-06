@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, StatusBar, TouchableOpacity,
-  Alert, Modal, TextInput,
+  Alert, Modal, TextInput, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -41,22 +41,7 @@ export default function MemberProfile() {
     ]);
   };
 
-  const handleCheckIn = () => {
-    if (checkedInToday) {
-      Alert.alert('Check Out', 'End your gym session now?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Check Out', onPress: checkOut },
-      ]);
-    } else {
-      Alert.alert('Check In', 'Start your gym session now?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Check In', onPress: () => {
-          checkIn();
-          Alert.alert('Checked In! 🏋️', 'Have a great workout!');
-        }},
-      ]);
-    }
-  };
+
 
   return (
     <View style={styles.container}>
@@ -88,14 +73,32 @@ export default function MemberProfile() {
           </View>
         </LinearGradient>
 
-        {/* Check In / Out Button */}
+        {/* Digital Member Card */}
         <View style={styles.section}>
-          <TouchableOpacity onPress={handleCheckIn} activeOpacity={0.8}>
-            <LinearGradient colors={checkedInToday ? [COLORS.danger, COLORS.dangerDark] : [COLORS.success, COLORS.successDark]} style={styles.checkInButton}>
-              <Ionicons name={checkedInToday ? 'log-out-outline' : 'log-in-outline'} size={24} color="#FFF" />
-              <Text style={styles.checkInText}>{checkedInToday ? 'Check Out' : 'Check In'}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          <LinearGradient colors={['#1E293B', '#0F172A']} style={styles.idCard}>
+            <View style={styles.idCardHeader}>
+              <View>
+                <Text style={styles.idCardLabel}>MEMBER ID</Text>
+                <Text style={styles.idCardNumber}>TG-{String(user?.id).padStart(6, '0')}</Text>
+              </View>
+              <View style={styles.qrContainer}>
+                <Image 
+                  source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TitansGym-Member-${user?.id}&color=1E293B&bgcolor=FFFFFF` }} 
+                  style={styles.qrCode} 
+                />
+              </View>
+            </View>
+            <View style={styles.idCardFooter}>
+              <View>
+                <Text style={styles.idCardLabel}>STATUS</Text>
+                <Text style={[styles.idCardValue, { color: COLORS.success }]}>ACTIVE</Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.idCardLabel}>TIER</Text>
+                <Text style={styles.idCardValue}>{user?.membershipType?.toUpperCase()}</Text>
+              </View>
+            </View>
+          </LinearGradient>
         </View>
 
         {/* Personal Info */}
@@ -124,10 +127,19 @@ export default function MemberProfile() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Membership</Text>
           <View style={styles.infoCard}>
-            <View style={styles.infoRow}><View style={styles.infoLeft}><Ionicons name="card-outline" size={18} color={COLORS.accent} /><Text style={styles.infoLabel}>Type</Text></View><Text style={styles.infoValue}>{user?.membershipType}</Text></View>
+            <View style={styles.infoRow}><View style={styles.infoLeft}><Ionicons name="card-outline" size={18} color={COLORS.accent} /><Text style={styles.infoLabel}>Type</Text></View><Text style={styles.infoValue}>{user?.membershipType?.toUpperCase()}</Text></View>
             <View style={[styles.infoRow, styles.infoRowBorder]}><View style={styles.infoLeft}><Ionicons name="hourglass-outline" size={18} color={COLORS.warning} /><Text style={styles.infoLabel}>Remaining</Text></View><Text style={[styles.infoValue, { color: COLORS.success }]}>{user?.membershipDaysRemaining} days</Text></View>
             <View style={[styles.infoRow, styles.infoRowBorder]}><View style={styles.infoLeft}><Ionicons name="wallet-outline" size={18} color={COLORS.success} /><Text style={styles.infoLabel}>Total Spent</Text></View><Text style={styles.infoValue}>₱{(user?.totalSpent || 0).toLocaleString()}</Text></View>
           </View>
+          
+          <TouchableOpacity activeOpacity={0.8} style={styles.upgradeBtn} onPress={() => {
+            navigation.navigate('UpgradeMembership' as never);
+          }}>
+            <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.upgradeGradient} start={{x: 0, y: 0}} end={{x: 1, y: 0}}>
+              <Ionicons name="star" size={20} color="#FFF" />
+              <Text style={styles.upgradeText}>Upgrade Membership</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
         {/* Recent Attendance */}
@@ -165,6 +177,32 @@ export default function MemberProfile() {
                 <Text style={styles.paymentAmount}>₱{payment.amount.toLocaleString()}</Text>
               </View>
             ))}
+          </View>
+        </View>
+
+        {/* Community & Social */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Community</Text>
+          <View style={styles.infoCard}>
+            <TouchableOpacity style={styles.settingsRow} activeOpacity={0.7}
+              onPress={() => navigation.navigate('CommunityFriends')}>
+              <View style={styles.infoLeft}><Ionicons name="people" size={20} color={COLORS.accent} /><Text style={styles.settingsLabel}>My Friends</Text></View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ color: COLORS.textTertiary, fontSize: 12 }}>12 Online</Text>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+              </View>
+            </TouchableOpacity>
+            <View style={styles.infoRowBorder} />
+            <TouchableOpacity style={styles.settingsRow} activeOpacity={0.7}
+              onPress={() => navigation.navigate('CommunityMessages')}>
+              <View style={styles.infoLeft}><Ionicons name="chatbubbles" size={20} color={COLORS.primary} /><Text style={styles.settingsLabel}>Messages</Text></View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ backgroundColor: COLORS.danger, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>3 New</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -228,7 +266,7 @@ export default function MemberProfile() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 20 },
+  scrollContent: { paddingBottom: 120 },
   profileHeader: { paddingTop: 56, paddingHorizontal: SIZES.spacingLg, paddingBottom: SIZES.spacingXl },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.spacingXl },
   headerTitle: { fontSize: SIZES.xxl, fontWeight: '800', color: COLORS.text },
@@ -242,14 +280,23 @@ const styles = StyleSheet.create({
   memberTypeText: { fontSize: SIZES.sm, fontWeight: '600', color: COLORS.warning },
   section: { paddingHorizontal: SIZES.spacingLg, marginTop: SIZES.spacingXl },
   sectionTitle: { fontSize: SIZES.lg, fontWeight: '700', color: COLORS.text, marginBottom: SIZES.spacingMd },
-  checkInButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: SIZES.radiusLg, ...SHADOWS.medium },
-  checkInText: { fontSize: SIZES.lg, fontWeight: '700', color: '#FFF' },
+  idCard: { borderRadius: SIZES.radiusLg, padding: SIZES.spacingLg, borderWidth: 1, borderColor: COLORS.border, ...SHADOWS.medium },
+  idCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.spacingXxl },
+  idCardLabel: { fontSize: SIZES.xs, color: COLORS.textTertiary, letterSpacing: 1, marginBottom: 4 },
+  idCardNumber: { fontSize: SIZES.xxl, fontWeight: '800', color: COLORS.text, letterSpacing: 2 },
+  idCardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  idCardValue: { fontSize: SIZES.md, fontWeight: '700', color: COLORS.text },
+  qrContainer: { padding: 4, backgroundColor: '#FFF', borderRadius: SIZES.radiusSm },
+  qrCode: { width: 48, height: 48 },
   infoCard: { backgroundColor: COLORS.cardBg, borderRadius: SIZES.radiusLg, borderWidth: 1, borderColor: COLORS.cardBorder, overflow: 'hidden' },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SIZES.spacingBase },
   infoRowBorder: { borderTopWidth: 1, borderTopColor: COLORS.border },
   infoLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   infoLabel: { fontSize: SIZES.md, color: COLORS.textSecondary },
   infoValue: { fontSize: SIZES.md, fontWeight: '600', color: COLORS.text },
+  upgradeBtn: { marginTop: SIZES.spacingMd, borderRadius: SIZES.radiusMd, overflow: 'hidden', ...SHADOWS.medium },
+  upgradeGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
+  upgradeText: { fontSize: SIZES.sm, fontWeight: '700', color: '#FFF', textTransform: 'uppercase', letterSpacing: 0.5 },
   attendanceRow: { flexDirection: 'row', alignItems: 'center', padding: SIZES.spacingMd },
   attDate: { width: 40, alignItems: 'center', marginRight: SIZES.spacingMd },
   attDay: { fontSize: SIZES.lg, fontWeight: '700', color: COLORS.text },

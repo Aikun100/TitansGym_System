@@ -135,6 +135,11 @@ class User extends Authenticatable
         return $query->where('role', 'admin');
     }
 
+    public function scopeCashiers($query)
+    {
+        return $query->where('role', 'cashier');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -159,6 +164,11 @@ class User extends Authenticatable
     public function isMember()
     {
         return $this->role === 'member';
+    }
+
+    public function isCashier()
+    {
+        return $this->role === 'cashier';
     }
 
     // Accessors

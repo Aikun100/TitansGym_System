@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, StatusBar, TouchableOpacity,
-  Switch, Alert, Linking, Modal,
+  Switch, Alert, Linking, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES, SHADOWS } from '../../constants/theme';
 import { useApp } from '../../context/AppContext';
+import { getSavedServerIp, setApiBaseUrl, testServerConnection, autoDetectServerIp } from '../../services/api';
 
 export default function SettingsScreen({ navigation, route }: any) {
   const { user, logout } = useApp();
@@ -18,6 +19,50 @@ export default function SettingsScreen({ navigation, route }: any) {
   const [showAbout, setShowAbout] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+
+  // Server config state
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [serverIp, setServerIp] = useState('');
+  const [serverStatus, setServerStatus] = useState<'idle' | 'testing' | 'connected' | 'failed'>('idle');
+  const [currentServerIp, setCurrentServerIp] = useState('');
+
+  useEffect(() => {
+    getSavedServerIp().then((ip) => {
+      setCurrentServerIp(ip);
+      setServerIp(ip);
+    });
+  }, []);
+
+  const handleServerTest = async () => {
+    if (!serverIp.trim()) { Alert.alert('Error', 'Enter a server IP'); return; }
+    setServerStatus('testing');
+    const ok = await testServerConnection(serverIp.trim());
+    setServerStatus(ok ? 'connected' : 'failed');
+  };
+
+  const handleServerSave = async () => {
+    if (!serverIp.trim()) { Alert.alert('Error', 'Enter a server IP'); return; }
+    setServerStatus('testing');
+    const ok = await testServerConnection(serverIp.trim());
+    if (ok) {
+      await setApiBaseUrl(serverIp.trim());
+      setCurrentServerIp(serverIp.trim());
+      setServerStatus('connected');
+      Alert.alert('✅ Saved', `Server set to ${serverIp.trim()}`, [
+        { text: 'OK', onPress: () => setShowServerConfig(false) },
+      ]);
+    } else {
+      setServerStatus('failed');
+      Alert.alert('Server Not Reachable', 'Save anyway?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Save', onPress: async () => {
+          await setApiBaseUrl(serverIp.trim());
+          setCurrentServerIp(serverIp.trim());
+          setShowServerConfig(false);
+        }},
+      ]);
+    }
+  };
 
   const section = route?.params?.section || null;
 
@@ -136,6 +181,29 @@ export default function SettingsScreen({ navigation, route }: any) {
                 trackColor={{ false: COLORS.border, true: COLORS.trainerAccent + '60' }}
                 thumbColor={darkMode ? COLORS.trainerAccent : COLORS.textMuted} />
             </View>
+          </View>
+        </View>
+
+        {/* Server Configuration */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="server" size={20} color={COLORS.primary} />
+            <Text style={styles.sectionTitle}>Server Connection</Text>
+          </View>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}
+              onPress={() => setShowServerConfig(true)}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: COLORS.primary + '18' }]}>
+                  <Ionicons name="globe-outline" size={18} color={COLORS.primary} />
+                </View>
+                <View>
+                  <Text style={styles.settingLabel}>Server IP</Text>
+                  <Text style={styles.settingDesc}>{currentServerIp || 'Not configured'}</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -292,7 +360,7 @@ export default function SettingsScreen({ navigation, route }: any) {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       {/* About Modal */}
@@ -397,6 +465,78 @@ export default function SettingsScreen({ navigation, route }: any) {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Server Config Modal */}
+      <Modal visible={showServerConfig} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Server Configuration</Text>
+              <TouchableOpacity onPress={() => setShowServerConfig(false)}>
+                <Ionicons name="close" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: SIZES.sm, color: COLORS.textTertiary, marginBottom: 16, lineHeight: 20 }}>
+              Change your server IP when you switch WiFi or hotspot.
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.surface, padding: 12, borderRadius: SIZES.radiusMd, marginBottom: 16, borderWidth: 1, borderColor: COLORS.border }}>
+              <Text style={{ fontSize: SIZES.sm, color: COLORS.textSecondary, fontWeight: '600' }}>Status:</Text>
+              <Text style={{ fontSize: SIZES.sm, fontWeight: '700', color: serverStatus === 'connected' ? '#22C55E' : serverStatus === 'failed' ? '#EF4444' : serverStatus === 'testing' ? '#F59E0B' : COLORS.textTertiary }}>
+                {serverStatus === 'connected' ? '● Connected' : serverStatus === 'failed' ? '● Not Reachable' : serverStatus === 'testing' ? '● Testing...' : '● Not Tested'}
+              </Text>
+            </View>
+            <Text style={{ fontSize: SIZES.sm, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 6 }}>Server IP Address</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: SIZES.radiusMd, paddingHorizontal: SIZES.spacingBase, height: 52, borderWidth: 1, borderColor: COLORS.border, gap: 10, marginBottom: 8 }}>
+              <Ionicons name="globe-outline" size={20} color={COLORS.textTertiary} />
+              <TextInput
+                style={{ flex: 1, fontSize: SIZES.base, color: COLORS.text }}
+                placeholder="e.g. 192.168.1.5"
+                placeholderTextColor={COLORS.textMuted}
+                value={serverIp}
+                onChangeText={(t) => { setServerIp(t); setServerStatus('idle'); }}
+                keyboardType="numeric"
+                autoCapitalize="none"
+              />
+            </View>
+            <Text style={{ fontSize: SIZES.xs, color: COLORS.textTertiary, marginBottom: 16 }}>💡 Tap "Auto-Detect" to automatically find your server, or enter the IP manually</Text>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+              <TouchableOpacity
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: SIZES.radiusMd, borderWidth: 1, backgroundColor: COLORS.primary + '12', borderColor: COLORS.primary + '30' }}
+                onPress={handleServerTest} disabled={serverStatus === 'testing'}
+              >
+                {serverStatus === 'testing' ? <ActivityIndicator size="small" color={COLORS.primary} /> : <Ionicons name="pulse-outline" size={18} color={COLORS.primary} />}
+                <Text style={{ fontSize: SIZES.sm, fontWeight: '600', color: COLORS.primary }}>Test</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: SIZES.radiusMd, borderWidth: 1, backgroundColor: '#22C55E12', borderColor: '#22C55E30' }}
+                onPress={async () => {
+                  setServerStatus('testing');
+                  const ip = await autoDetectServerIp();
+                  if (ip) {
+                    setServerIp(`${ip}:8000`);
+                    setCurrentServerIp(`${ip}:8000`);
+                    setServerStatus('connected');
+                    Alert.alert('✅ Auto-Detected', `Server IP: ${ip}`);
+                  } else {
+                    setServerStatus('failed');
+                    Alert.alert('Not Found', 'Could not auto-detect. Enter IP manually.');
+                  }
+                }}
+                disabled={serverStatus === 'testing'}
+              >
+                <Ionicons name="flash-outline" size={18} color="#22C55E" />
+                <Text style={{ fontSize: SIZES.sm, fontWeight: '600', color: '#22C55E' }}>Auto-Detect</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity onPress={handleServerSave} activeOpacity={0.8} disabled={serverStatus === 'testing'}>
+              <LinearGradient colors={[COLORS.primary, COLORS.primaryDark]} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: SIZES.radiusMd, ...SHADOWS.medium }}>
+                <Ionicons name="save-outline" size={20} color="#FFF" />
+                <Text style={{ fontSize: SIZES.base, fontWeight: '700', color: '#FFF' }}>Save & Connect</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

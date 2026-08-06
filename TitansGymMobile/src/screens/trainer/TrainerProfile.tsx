@@ -11,8 +11,9 @@ import { useApp } from '../../context/AppContext';
 
 export default function TrainerProfile() {
   const navigation = useNavigation<any>();
-  const { user, setUser, logout, clients } = useApp();
+  const { user, setUser, logout, updateProfile, clients } = useApp();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [editSpec, setEditSpec] = useState(user?.specialization || '');
@@ -21,17 +22,23 @@ export default function TrainerProfile() {
   const initials = (user?.name || 'T').replace('Coach ', '').split(' ').map(n => n[0]).join('').slice(0, 2);
   const certs = (user?.certifications || '').split(', ').filter(Boolean);
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!editName.trim()) { Alert.alert('Error', 'Name is required'); return; }
-    setUser({
-      ...user!,
-      name: editName.trim(),
-      phone: editPhone.trim(),
-      specialization: editSpec.trim(),
-      hourlyRate: parseFloat(editRate) || user!.hourlyRate,
-    });
-    setShowEditModal(false);
-    Alert.alert('Updated ✅', 'Profile has been updated!');
+    setSaving(true);
+    try {
+      await updateProfile({
+        name: editName.trim(),
+        phone: editPhone.trim(),
+        specialization: editSpec.trim(),
+        hourly_rate: parseFloat(editRate) || undefined,
+      });
+      setShowEditModal(false);
+      Alert.alert('Updated ✅', 'Profile has been updated!');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSignOut = () => {
@@ -191,7 +198,7 @@ export default function TrainerProfile() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 20 },
+  scrollContent: { paddingBottom: 120 },
   profileHeader: { paddingTop: 56, paddingHorizontal: SIZES.spacingLg, paddingBottom: SIZES.spacingXl },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.spacingXl },
   headerTitle: { fontSize: SIZES.xxl, fontWeight: '800', color: COLORS.text },

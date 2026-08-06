@@ -1,11 +1,233 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// ─── Configuration ───
-// Your computer's local network IP for Expo Go on physical device
-// Change this if your IP changes (run: ipconfig in terminal)
-const API_BASE_URL = 'http://10.0.0.50:8001/api';
-
+// ─── Dynamic API Configuration ───
+// The server URL is automatically detected from the Expo dev server IP.
+// When you run `expo start`, Expo Go connects to your laptop via its current IP.
+// We grab that same IP and use it for the Laravel API — so even if you change
+// WiFi or hotspot, the app automatically finds the right IP.
+const SERVER_URL_KEY = 'server_url';
 const TOKEN_KEY = 'auth_token';
+const DEFAULT_PORT = '8000';
+
+// In-memory cache for performance
+let _cachedBaseUrl: string | null = null;
+
+/**
+ * Auto-detect the laptop's IP from Expo's dev server connection.
+ * Expo Go already knows the IP — we just extract it.
+ * This works regardless of WiFi, hotspot, or network changes because
+ * Expo updates this value each time the dev server starts.
+ */
+function getExpoHostIp(): string | null {
+  try {
+    // Expo SDK 54: Constants.expoGoConfig?.debuggerHost has "IP:PORT"
+    const debuggerHost =
+      (Constants as any).expoGoConfig?.debuggerHost ||
+      (Constants as any).manifest?.debuggerHost ||
+      (Constants as any).manifest2?.extra?.expoGo?.debuggerHost;
+
+    if (debuggerHost) {
+      const ip = debuggerHost.split(':')[0];
+      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+        return ip;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Get the current API base URL.
+ * SMART LOGIC: Always checks if the network IP changed via Expo.
+ * If the Expo dev server IP differs from the saved URL, it means the
+ * network changed (e.g., switched WiFi/hotspot) — auto-update!
+ */
+export async function getApiBaseUrl(): Promise<string> {
+  // Always check Expo IP to detect network changes
+  const expoIp = getExpoHostIp();
+
+  if (expoIp) {
+    const expoUrl = `http://${expoIp}:${DEFAULT_PORT}/api`;
+
+    // If we have a cached URL, check if Expo IP changed
+    if (_cachedBaseUrl) {
+      const cachedIpMatch = _cachedBaseUrl.match(/\/\/([^:\/]+)/);
+      const cachedIp = cachedIpMatch ? cachedIpMatch[1] : null;
+
+      if (cachedIp !== expoIp) {
+        // Network changed! Auto-update to new IP
+        console.log(`[API] Network changed: ${cachedIp} → ${expoIp}. Auto-updating.`);
+        _cachedBaseUrl = expoUrl;
+        await AsyncStorage.setItem(SERVER_URL_KEY, expoUrl);
+        return expoUrl;
+      }
+      return _cachedBaseUrl;
+    }
+
+    // No cache yet — check saved value
+    const saved = await AsyncStorage.getItem(SERVER_URL_KEY);
+    if (saved) {
+      const savedIpMatch = saved.match(/\/\/([^:\/]+)/);
+      const savedIp = savedIpMatch ? savedIpMatch[1] : null;
+
+      if (savedIp !== expoIp) {
+        // Saved IP is outdated — network changed since last use
+        console.log(`[API] Saved IP outdated: ${savedIp} → ${expoIp}. Auto-updating.`);
+        _cachedBaseUrl = expoUrl;
+        await AsyncStorage.setItem(SERVER_URL_KEY, expoUrl);
+        return expoUrl;
+      }
+      _cachedBaseUrl = saved;
+      return saved;
+    }
+
+    // Nothing saved — first run, use Expo IP
+    _cachedBaseUrl = expoUrl;
+    await AsyncStorage.setItem(SERVER_URL_KEY, expoUrl);
+    return expoUrl;
+  }
+
+  // Expo IP not available (e.g., production build) — use saved/cached
+  if (_cachedBaseUrl) return _cachedBaseUrl;
+
+  const saved = await AsyncStorage.getItem(SERVER_URL_KEY);
+  if (saved) {
+    _cachedBaseUrl = saved;
+    return saved;
+  }
+
+  // Last resort fallback
+  return `http://192.168.1.1:${DEFAULT_PORT}/api`;
+}
+
+/**
+ * Force re-detect the server IP from Expo (useful after network change).
+ * Clears the cached URL and re-detects from Expo's connection.
+ */
+export async function autoDetectServerIp(): Promise<string | null> {
+  const expoIp = getExpoHostIp();
+  if (expoIp) {
+    const url = `http://${expoIp}:${DEFAULT_PORT}/api`;
+    _cachedBaseUrl = url;
+    await AsyncStorage.setItem(SERVER_URL_KEY, url);
+    return expoIp;
+  }
+  return null;
+}
+
+/**
+ * Set a new API base URL manually and persist it.
+ * @param ip - Just the IP address (e.g. "192.168.1.5") or full URL
+ */
+export async function setApiBaseUrl(ip: string): Promise<void> {
+  let url: string;
+  if (ip.startsWith('http')) {
+    url = ip.replace(/\/+$/, '');
+    if (!url.endsWith('/api')) url += '/api';
+  } else {
+    const hasPort = ip.includes(':');
+    url = `http://${ip}${hasPort ? '' : ':' + DEFAULT_PORT}/api`;
+  }
+
+  _cachedBaseUrl = url;
+  await AsyncStorage.setItem(SERVER_URL_KEY, url);
+}
+
+/**
+ * Get the currently saved server IP (for display in settings).
+ */
+export async function getSavedServerIp(): Promise<string> {
+  const url = await getApiBaseUrl();
+  const match = url.match(/\/\/([^/]+)/);
+  return match ? match[1] : '';
+}
+
+/**
+ * Test if a given server URL is reachable.
+ * Returns true if the server responds within the timeout.
+ */
+export async function testServerConnection(ip: string): Promise<boolean> {
+  const hasPort = ip.includes(':');
+  const testUrl = `http://${ip}${hasPort ? '' : ':' + DEFAULT_PORT}/api/ping`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+  try {
+    const response = await fetch(testUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response.ok || response.status === 200 || response.status === 404 || response.status === 401;
+  } catch {
+    clearTimeout(timeoutId);
+    // Fallback: try /api/user — any response (even 401) means server is alive
+    const fallbackUrl = `http://${ip}${hasPort ? '' : ':' + DEFAULT_PORT}/api/user`;
+    const controller2 = new AbortController();
+    const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+    try {
+      const response = await fetch(fallbackUrl, {
+        signal: controller2.signal,
+        headers: { 'Accept': 'application/json' },
+      });
+      clearTimeout(timeoutId2);
+      return true;
+    } catch {
+      clearTimeout(timeoutId2);
+      return false;
+    }
+  }
+}
+
+/**
+ * Auto-discover the server by scanning common local network IP ranges.
+ * Returns the first reachable IP or null.
+ */
+export async function autoDiscoverServer(): Promise<string | null> {
+  // First try Expo's IP — almost always correct
+  const expoIp = getExpoHostIp();
+  if (expoIp) {
+    const reachable = await testServerConnection(expoIp);
+    if (reachable) return expoIp;
+  }
+
+  // Common subnets for hotspots and WiFi
+  const prefixes = [
+    '192.168.43',   // Android hotspot
+    '192.168.137',  // Windows hotspot
+    '172.20.10',    // iPhone hotspot
+    '192.168.1',    // Common router
+    '192.168.0',    // Common router
+    '10.0.0',       // Some routers
+    '192.168.100',  // Some ISPs
+  ];
+
+  const candidates: string[] = [];
+  for (const prefix of prefixes) {
+    for (const host of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100, 101, 254]) {
+      candidates.push(`${prefix}.${host}`);
+    }
+  }
+
+  const BATCH_SIZE = 15;
+  for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+    const batch = candidates.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(async (ip) => {
+        const reachable = await testServerConnection(ip);
+        if (reachable) return ip;
+        throw new Error('not reachable');
+      })
+    );
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+    }
+  }
+
+  return null;
+}
 
 // ─── Token Management ───
 export async function getToken(): Promise<string | null> {
@@ -21,10 +243,13 @@ export async function removeToken(): Promise<void> {
 }
 
 // ─── Base Request ───
+const REQUEST_TIMEOUT_MS = 8000;
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const baseUrl = await getApiBaseUrl();
   const token = await getToken();
 
   const headers: Record<string, string> = {
@@ -37,24 +262,77 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}${endpoint}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+
+    // ─── AUTO-RETRY: If request fails, try re-detecting server IP ───
+    // This handles the case where the network changed mid-session
+    const newIp = getExpoHostIp();
+    if (newIp) {
+      const currentUrl = baseUrl;
+      const newUrl = `http://${newIp}:${DEFAULT_PORT}/api`;
+      if (newUrl !== currentUrl) {
+        // IP changed! Update and retry once
+        _cachedBaseUrl = newUrl;
+        await AsyncStorage.setItem(SERVER_URL_KEY, newUrl);
+        console.log(`[API] Network changed. Auto-updated server IP to ${newIp}`);
+
+        try {
+          const retryController = new AbortController();
+          const retryTimeout = setTimeout(() => retryController.abort(), REQUEST_TIMEOUT_MS);
+          response = await fetch(`${newUrl}${endpoint}`, {
+            ...options,
+            headers,
+            signal: retryController.signal,
+          });
+          clearTimeout(retryTimeout);
+          // Success! Continue with this response below
+        } catch (retryErr: any) {
+          clearTimeout(timeoutId);
+          if (retryErr.name === 'AbortError') {
+            throw new ApiError('Server not reachable. Check your connection and make sure the backend is running.', 0);
+          }
+          throw new ApiError(retryErr.message || 'Network error. Check your connection.', 0);
+        }
+      } else {
+        if (err.name === 'AbortError') {
+          throw new ApiError('Server not reachable. Check your connection and make sure the backend is running.', 0);
+        }
+        throw new ApiError(err.message || 'Network error. Check your connection.', 0);
+      }
+    } else {
+      if (err.name === 'AbortError') {
+        throw new ApiError('Server not reachable. Check your connection and make sure the backend is running.', 0);
+      }
+      throw new ApiError(err.message || 'Network error. Check your connection.', 0);
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // Handle 401 - token expired
-  if (response.status === 401) {
+  if (response!.status === 401) {
     await removeToken();
     throw new ApiError('Session expired. Please login again.', 401);
   }
 
-  const data = await response.json();
+  const data = await response!.json();
 
-  if (!response.ok) {
+  if (!response!.ok) {
     const message = data.message || data.errors
       ? Object.values(data.errors || {}).flat().join(', ')
       : 'Something went wrong';
-    throw new ApiError(message, response.status, data.errors);
+    throw new ApiError(message, response!.status, data.errors);
   }
 
   return data as T;
@@ -127,7 +405,6 @@ export const memberApi = {
       recent_attendance: any[];
     }>('/member/dashboard'),
 
-  // Bookings
   getBookings: (status?: string) =>
     request<any>(`/member/bookings${status ? `?status=${status}` : ''}`),
 
@@ -148,7 +425,6 @@ export const memberApi = {
   cancelBooking: (id: number) =>
     request<{ message: string }>(`/member/bookings/${id}/cancel`, { method: 'PATCH' }),
 
-  // Progress
   getProgress: () =>
     request<any>('/member/progress'),
 
@@ -164,14 +440,12 @@ export const memberApi = {
       body: JSON.stringify(data),
     }),
 
-  // Workout Plans
   getWorkoutPlans: () =>
     request<any[]>('/member/workout-plans'),
 
   markPlanExecuted: (id: number) =>
     request<{ message: string }>(`/member/workout-plans/${id}/execute`, { method: 'POST' }),
 
-  // Workout Logs
   getWorkoutLogs: () =>
     request<any>('/member/workout-logs'),
 
@@ -187,15 +461,23 @@ export const memberApi = {
       body: JSON.stringify(data),
     }),
 
-  // Attendance
   getAttendance: () =>
     request<any>('/member/attendance'),
 
-  // Payments
   getPayments: () =>
     request<any>('/member/payments'),
 
-  // Profile
+  createPaymongoCheckout: (membership_type: string) =>
+    request<{ checkout_url: string }>('/member/create-paymongo-checkout', {
+      method: 'POST',
+      body: JSON.stringify({ membership_type }),
+    }),
+
+  verifyPaymongoPayment: () =>
+    request<{ message: string; user: any }>('/member/verify-paymongo-payment', {
+      method: 'POST',
+    }),
+
   getProfile: () =>
     request<{ user: any }>('/member/profile'),
 
@@ -212,11 +494,9 @@ export const memberApi = {
       body: JSON.stringify(data),
     }),
 
-  // Trainers
   getTrainers: () =>
     request<any[]>('/member/trainers'),
 
-  // Notifications
   getNotifications: () =>
     request<{ notifications: any[]; unread_count: number }>('/member/notifications'),
 
@@ -233,7 +513,6 @@ export const trainerApi = {
       upcoming_bookings: any[];
     }>('/trainer/dashboard'),
 
-  // Bookings
   getBookings: (params?: { status?: string; date?: string }) => {
     const qs = new URLSearchParams();
     if (params?.status) qs.append('status', params.status);
@@ -248,7 +527,6 @@ export const trainerApi = {
       body: JSON.stringify({ status }),
     }),
 
-  // Workout Plans
   getWorkoutPlans: () =>
     request<any[]>('/trainer/workout-plans'),
 
@@ -284,11 +562,9 @@ export const trainerApi = {
   deleteWorkoutPlan: (id: number) =>
     request<{ message: string }>(`/trainer/workout-plans/${id}`, { method: 'DELETE' }),
 
-  // Clients
   getClients: () =>
     request<any[]>('/trainer/clients'),
 
-  // Attendance
   getAttendance: (date?: string) =>
     request<any>(`/trainer/attendance${date ? `?date=${date}` : ''}`),
 
@@ -306,7 +582,6 @@ export const trainerApi = {
       body: JSON.stringify(data),
     }),
 
-  // Progress
   getProgress: (memberId?: number) =>
     request<any>(`/trainer/progress${memberId ? `?member_id=${memberId}` : ''}`),
 
@@ -323,7 +598,6 @@ export const trainerApi = {
       body: JSON.stringify(data),
     }),
 
-  // Profile
   getProfile: () =>
     request<{ user: any }>('/trainer/profile'),
 
@@ -340,14 +614,59 @@ export const trainerApi = {
       body: JSON.stringify(data),
     }),
 
-  // Notifications
   getNotifications: () =>
     request<{ notifications: any[]; unread_count: number }>('/trainer/notifications'),
 };
 
-// ─── API URL Configuration Helper ───
-export function setApiBaseUrl(url: string) {
-  // This would require a different approach in production
-  // For now, change API_BASE_URL constant at the top of this file
-  console.log(`To change API URL, edit the API_BASE_URL constant in src/services/api.ts to: ${url}`);
-}
+// ─── CASHIER API ───
+export const cashierApi = {
+  getDashboardStats: () =>
+    request<any>('/cashier/dashboard-stats'),
+
+  getTransactions: () =>
+    request<{ transactions: any[] }>('/cashier/transactions'),
+
+  simulateScan: () =>
+    request<any>('/cashier/simulate-scan'),
+
+  getMember: (id: string | number) =>
+    request<any>(`/cashier/member/${id}`),
+
+  createSessionPayment: (data: { member_id: string | number | null; amount: number; description: string; method: 'cash' | 'paymongo'; items: any[] }) =>
+    request<any>('/cashier/create-session-payment', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  verifySessionPayment: (checkout_id: string) =>
+    request<any>('/cashier/verify-session-payment', {
+      method: 'POST',
+      body: JSON.stringify({ checkout_id }),
+    }),
+    
+  verifyOrderQr: (qrCode: string) => request<any>(`/cashier/orders/${qrCode}`),
+  completeOrder: (qrCode: string, paymentMethod: string) => request<any>(`/cashier/orders/${qrCode}/complete`, { method: 'POST', body: JSON.stringify({ payment_method: paymentMethod }) }),
+};
+
+// ─── SOCIAL API ───
+export const socialApi = {
+  getFriends: () => request<{ friends: any[], requests: any[], potential: any[] }>('/social/friends'),
+  addFriend: (friend_id: number) => request<any>('/social/friends/add', { method: 'POST', body: JSON.stringify({ friend_id }) }),
+  acceptFriend: (friend_id: number) => request<any>('/social/friends/accept', { method: 'POST', body: JSON.stringify({ friend_id }) }),
+  getPublicProfile: (id: number) => request<any>(`/social/profile/${id}`),
+  getMessages: (friendId: string) => request<any[]>(`/social/messages/${friendId}`),
+  sendMessage: (receiver_id: number, content: string, image_base64?: string) => request<any>('/social/messages', { method: 'POST', body: JSON.stringify({ receiver_id, content, image_base64 }) }),
+  deleteMessage: (id: string) => request<any>(`/social/messages/${id}`, { method: 'DELETE' }),
+  unsendMessage: (id: string) => request<any>(`/social/messages/${id}/unsend`, { method: 'POST' }),
+  reactToMessage: (id: string, emoji: string) => request<any>(`/social/messages/${id}/react`, { method: 'POST', body: JSON.stringify({ emoji }) }),
+  getActivities: () => request<any[]>('/social/activities'),
+  storeActivity: (data: { type: string, title?: string, duration_minutes?: number, notes?: string, photo_uri?: string }) => request<any>('/social/activities', { method: 'POST', body: JSON.stringify(data) }),
+  toggleLike: (id: number) => request<any>(`/social/activities/${id}/toggle-like`, { method: 'POST' }),
+  addComment: (id: number, comment: string) => request<any>(`/social/activities/${id}/comments`, { method: 'POST', body: JSON.stringify({ comment }) }),
+};
+
+// ─── SHOP API ───
+export const shopApi = {
+  getProducts: () => request<any[]>('/products'),
+  checkoutOrder: (items: any[], payment_method?: 'cash' | 'paymongo') => request<any>('/orders/checkout', { method: 'POST', body: JSON.stringify({ items, payment_method }) }),
+};

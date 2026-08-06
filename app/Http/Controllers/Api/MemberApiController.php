@@ -13,6 +13,7 @@ use App\Models\WorkoutLog;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class MemberApiController extends Controller
 {
@@ -97,6 +98,19 @@ class MemberApiController extends Controller
             'payment_method' => 'nullable|string',
         ]);
 
+        // Check for schedule conflicts
+        $conflict = Booking::where('trainer_id', $request->trainer_id)
+            ->where('booking_date', $request->booking_date)
+            ->where('start_time', $request->start_time)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->exists();
+
+        if ($conflict) {
+            return response()->json([
+                'message' => 'The selected trainer is already booked for this date and time. Please choose a different slot.'
+            ], 422);
+        }
+
         $booking = Booking::create([
             'member_id' => Auth::id(),
             'trainer_id' => $request->trainer_id,
@@ -158,8 +172,8 @@ class MemberApiController extends Controller
 
         $progress = Progress::create([
             'member_id' => Auth::id(),
-            'trainer_id' => null,
             'record_date' => now(),
+            'height' => Auth::user()->height ?? 0,
             'weight' => $request->weight,
             'body_fat_percentage' => $request->body_fat_percentage,
             'muscle_mass' => $request->muscle_mass,
@@ -291,13 +305,38 @@ class MemberApiController extends Controller
             'height' => 'nullable|numeric',
             'weight' => 'nullable|numeric',
             'sex' => 'nullable|in:male,female',
+            'membership_type' => 'nullable|in:basic,premium,vip',
         ]);
+
+        if (isset($validated['membership_type']) && $validated['membership_type'] !== $user->membership_type) {
+            $validated['membership_expiry'] = now()->addDays(30);
+            $validated['membership_status'] = 'active';
+            
+            $amount = match($validated['membership_type']) {
+                'vip' => 2500,
+                'premium' => 1500,
+                default => 1000,
+            };
+            
+            \App\Models\Payment::create([
+                'member_id' => $user->id,
+                'amount' => $amount,
+                'payment_date' => now(),
+                'due_date' => now(),
+                'payment_method' => 'online',
+                'status' => 'paid',
+                'description' => ucfirst($validated['membership_type']) . ' Membership Upgrade',
+                'membership_type' => $validated['membership_type'],
+                'period_start' => now(),
+                'period_end' => now()->addDays(30),
+            ]);
+        }
 
         $user->update($validated);
 
         return response()->json([
             'message' => 'Profile updated successfully!',
-            'user' => $user->fresh(),
+            'user' => app(AuthController::class)->user(request())->getData()->user,
         ]);
     }
 
@@ -347,6 +386,127 @@ class MemberApiController extends Controller
         $notification->update(['is_read' => true]);
 
         return response()->json(['message' => 'Marked as read.']);
+    }
+
+    // ─── PayMongo Integration ───
+
+    public function createPaymongoCheckout(Request $request)
+    {
+        $request->validate(['membership_type' => 'required|in:annual,monthly']);
+        $user = Auth::user();
+        
+        $amount = match($request->membership_type) {
+            'monthly' => 100000, // Paymongo uses cents (1000.00 PHP)
+            'annual' => 50000,   // (500.00 PHP)
+        };
+
+        $response = Http::withoutVerifying()
+            ->withBasicAuth(env('PAYMONGO_SECRET_KEY', ''), '')
+            ->post('https://api.paymongo.com/v1/checkout_sessions', [
+                'data' => [
+                    'attributes' => [
+                        'send_email_receipt' => false,
+                        'show_description' => true,
+                        'show_line_items' => true,
+                        'line_items' => [
+                            [
+                                'currency' => 'PHP',
+                                'amount' => $amount,
+                                'name' => ucfirst($request->membership_type) . ' Membership Upgrade',
+                                'quantity' => 1
+                            ]
+                        ],
+                        // HERE IS WHERE YOU ADD OR REMOVE PAYMENT OPTIONS:
+                        'payment_method_types' => ['card', 'gcash', 'paymaya', 'grab_pay'],
+                        'success_url' => url('/'),
+                        'cancel_url' => url('/')
+                    ]
+                ]
+            ]);
+
+        if ($response->successful()) {
+            $link = $response->json()['data'];
+            
+            \App\Models\Payment::create([
+                'member_id' => $user->id,
+                'amount' => $amount / 100,
+                'payment_date' => now(),
+                'due_date' => now(),
+                'payment_method' => 'online',
+                'status' => 'pending',
+                'transaction_id' => $link['id'],
+                'description' => ucfirst($request->membership_type) . ' Membership Upgrade',
+                'membership_type' => $request->membership_type,
+                'period_start' => now(),
+                'period_end' => now()->addDays(30),
+            ]);
+
+            return response()->json(['checkout_url' => $link['attributes']['checkout_url']]);
+        }
+
+        return response()->json(['message' => 'Failed to create payment link: ' . $response->body()], 500);
+    }
+
+    public function verifyPaymongoPayment(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Find the pending payment for this user
+        $payment = \App\Models\Payment::where('member_id', $user->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        if (!$payment || !$payment->transaction_id) {
+            return response()->json(['message' => 'No pending payment found'], 404);
+        }
+
+        // Check with PayMongo (Checkout Sessions API)
+        $response = Http::withoutVerifying()
+            ->withBasicAuth(env('PAYMONGO_SECRET_KEY', ''), '')
+            ->get('https://api.paymongo.com/v1/checkout_sessions/' . $payment->transaction_id);
+
+        if ($response->successful()) {
+            \Illuminate\Support\Facades\Log::info('PayMongo Verify: ' . json_encode($response->json()));
+            
+            $attributes = $response->json()['data']['attributes'] ?? [];
+            $payments = $attributes['payments'] ?? [];
+            $paymentIntent = $attributes['payment_intent'] ?? null;
+            
+            $isPaid = false;
+            
+            // Check payments array
+            foreach ($payments as $p) {
+                if (($p['attributes']['status'] ?? '') === 'paid') {
+                    $isPaid = true;
+                }
+            }
+            
+            // Fallback: Check payment intent
+            if (!$isPaid && $paymentIntent && ($paymentIntent['attributes']['status'] ?? '') === 'succeeded') {
+                $isPaid = true;
+            }
+
+            if ($isPaid) {
+                $payment->update(['status' => 'paid']);
+                
+                // Upgrade the user
+                $user->update([
+                    'membership_type' => $payment->membership_type,
+                    'membership_status' => 'active',
+                    'membership_expiry' => $payment->period_end,
+                ]);
+
+                return response()->json([
+                    'message' => 'Payment verified and account upgraded!',
+                    'user' => app(AuthController::class)->user(request())->getData()->user
+                ]);
+            }
+            
+            return response()->json(['message' => 'Payment is still ' . $status], 400);
+        }
+
+        return response()->json(['message' => 'Failed to verify payment with PayMongo'], 500);
     }
 
     // ─── Helpers ───
